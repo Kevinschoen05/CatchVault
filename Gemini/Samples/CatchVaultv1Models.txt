@@ -1,0 +1,198 @@
+
+//Angler
+@Model
+class Angler: Identifiable {
+    var id: UUID = UUID()
+    var name: String
+
+    var trips: [Trip] = []
+    var fish: [FishCatch] = []
+    
+    init(id: UUID = UUID(), name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+
+//ContentModelView
+struct ReservoirSummary: Identifiable {
+    let id: UUID
+    let reservoir: Reservoir
+    let tripCount: Int
+    let fishCount: Int
+}
+
+@MainActor
+final class ContentModelView: ObservableObject {
+    @Published var summaries: [ReservoirSummary] = []
+    @Published var selectedYear: Int? = nil
+    var availableYears: [Int] = []
+    
+     var allTrips: [Trip] = []
+     var allReservoirs: [Reservoir] = []
+    
+    func updateData(trips: [Trip], reservoirs: [Reservoir]) {
+        self.allTrips = trips
+        self.allReservoirs = reservoirs
+        
+        let calendar = Calendar.current
+        self.availableYears = Array(Set(trips.map { calendar.component(.year, from: $0.startTime) })).sorted(by: >)
+        
+        computeSummaries()
+    }
+    
+    private func computeSummaries() {
+        let calendar = Calendar.current
+        
+        // Respect selected year, if any
+        let filteredTrips = allTrips.filter {
+            if let selectedYear = selectedYear {
+                return calendar.component(.year, from: $0.startTime) == selectedYear
+            } else {
+                return true
+            }
+        }
+        
+        // Build summaries for all reservoirs, even if no trips
+        var output: [ReservoirSummary] = []
+        
+        for reservoir in allReservoirs {
+            let tripsForRes = filteredTrips.filter { $0.reservoir == reservoir }
+            let fishCount = tripsForRes.flatMap { $0.catches }.count
+            
+            let summary = ReservoirSummary(
+                id: reservoir.id,
+                reservoir: reservoir,
+                tripCount: tripsForRes.count,
+                fishCount: fishCount
+            )
+            
+            output.append(summary)
+        }
+        
+        self.summaries = output.sorted { $0.reservoir.name < $1.reservoir.name }
+    }
+    
+    
+
+}
+
+//FishCatch
+@Model
+class FishCatch {
+    var id: UUID = UUID()
+    var timestamp: Date
+    var weight: Double
+    var latitude: Double?
+    var longitude: Double?
+    var imagePath: String?
+    var comment: String?
+    
+    // Relationships
+    var trip: Trip
+    
+    @Relationship(inverse: \Species.catches)
+    var species: Species
+    
+    @Relationship(inverse: \Angler.fish)
+    var angler: Angler
+    
+    init(
+        timestamp: Date,
+        weight: Double,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        imagePath: String? = nil,
+        trip: Trip,
+        species: Species,
+        angler: Angler,
+        comment: String? = nil
+    ) {
+        self.timestamp = timestamp
+        self.weight = weight
+        self.latitude = latitude
+        self.longitude = longitude
+        self.imagePath = imagePath
+        self.trip = trip
+        self.species = species
+        self.angler = angler
+        self.comment = comment
+    }
+}
+
+//Reservoir
+@Model
+class Reservoir {
+    var id: UUID = UUID()
+    var name: String
+    
+    //Relationships
+    var trips: [Trip] = []
+
+    
+    init(name: String) {
+        self.name = name
+    }
+}
+
+
+//Species
+@Model
+class Species {
+    var id: UUID = UUID()
+
+    var name: String
+
+    var catches: [FishCatch] = []
+
+    
+    init(name: String) {
+        self.name = name
+    }
+}
+
+
+//Trip
+@Model
+class Trip {
+    var id: UUID
+    var startTime: Date
+    var endTime: Date?
+    var notes: String?
+    var migrated: Bool
+    var dataVersion: Int
+    var weatherSummary: String? = nil
+    var temperature: Double? = nil
+    var windSpeed: Double? = nil
+    var precipitation: Double? = nil
+
+    
+    // Relationships
+    var reservoir: Reservoir
+    
+    @Relationship(inverse: \FishCatch.trip)
+    var catches: [FishCatch] = []
+    
+    @Relationship(inverse: \Angler.trips)
+    var anglers: [Angler] = []
+    
+    init(
+        id: UUID = UUID(),
+        startTime: Date,
+        endTime: Date? = nil,
+        anglers: [Angler] = [],
+        notes: String? = nil,
+        reservoir: Reservoir,
+        migrated: Bool = false,
+        dataVersion: Int = 1
+    ) {
+        self.id = id
+        self.startTime = startTime
+        self.endTime = endTime
+        self.anglers = anglers
+        self.notes = notes
+        self.reservoir = reservoir
+        self.migrated = migrated
+        self.dataVersion = dataVersion
+    }
+}

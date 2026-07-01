@@ -1,0 +1,305 @@
+
+import Foundation
+import SwiftData
+
+var anglerMap: [String: Angler] = [:] // Deduplication: name → Angler
+
+struct LegacyFishRecord: Decodable {
+    let id: LegacyID?
+    let date: Date
+    let image: String?
+    let species: String
+    let angler: String
+    let weight: StringOrDouble
+    let reservoir: String
+    let comment: String?
+    let latitude: String?
+    let longitude: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case date, image, species, angler, weight, reservoir, comment, latitude, longitude
+    }
+    
+    enum DateCodingKeys: String, CodingKey {
+        case dollarDate = "$date"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try? container.decodeIfPresent(LegacyID.self, forKey: .id)
+        
+        // Flexible date decoding
+        if let dateContainer = try? container.nestedContainer(keyedBy: DateCodingKeys.self, forKey: .date),
+           let isoDateString = try? dateContainer.decode(String.self, forKey: .dollarDate) {
+            let isoFormatter = ISO8601DateFormatter()
+            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let parsedDate = isoFormatter.date(from: isoDateString) {
+                date = parsedDate
+                print("✅ Parsed ISO8601 date with fractional seconds: \(isoDateString)")
+            } else {
+                print("❌ Failed to parse ISO8601 date: \(isoDateString)")
+                throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "Invalid ISO8601 date with fractional seconds")
+            }
+        } else if let rawDateString = try? container.decode(String.self, forKey: .date) {
+            let legacyFormatter = DateFormatter()
+            legacyFormatter.dateFormat = "M/d/yyyy"
+            legacyFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+            
+            if let parsedDate = legacyFormatter.date(from: rawDateString) {
+                date = parsedDate
+                print("✅ Parsed legacy string date: \(rawDateString)")
+            } else {
+                print("❌ Failed to parse legacy string date: \(rawDateString)")
+                throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "Unrecognized legacy date format: \(rawDateString)")
+            }
+        } else {
+            print("❌ Missing or invalid date")
+            throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "Missing or invalid date")
+        }
+        
+        guard let species = try? container.decode(String.self, forKey: .species) else {
+            print("❌ Failed to decode species")
+            throw DecodingError.dataCorruptedError(forKey: .species, in: container, debugDescription: "Missing species")
+        }
+        self.species = species
+        
+        guard let angler = try? container.decode(String.self, forKey: .angler) else {
+            print("❌ Failed to decode angler")
+            throw DecodingError.dataCorruptedError(forKey: .angler, in: container, debugDescription: "Missing angler")
+        }
+        self.angler = angler
+        
+        guard let weight = try? container.decode(StringOrDouble.self, forKey: .weight) else {
+            print("❌ Failed to decode weight")
+            throw DecodingError.dataCorruptedError(forKey: .weight, in: container, debugDescription: "Missing or invalid weight")
+        }
+        self.weight = weight
+        
+        guard let reservoir = try? container.decode(String.self, forKey: .reservoir) else {
+            print("❌ Failed to decode reservoir")
+            throw DecodingError.dataCorruptedError(forKey: .reservoir, in: container, debugDescription: "Missing reservoir")
+        }
+        self.reservoir = reservoir
+        
+        image = try? container.decodeIfPresent(String.self, forKey: .image)
+        comment = try? container.decodeIfPresent(String.self, forKey: .comment)
+        
+        if let rawLatitude = try? container.decodeIfPresent(String.self, forKey: .latitude) {
+            latitude = rawLatitude.isEmpty ? nil : rawLatitude
+            print("📍 Latitude parsed: \(latitude ?? "nil")")
+        } else {
+            latitude = nil
+            print("📍 Latitude missing or failed to decode")
+        }
+        
+        if let rawLongitude = try? container.decodeIfPresent(String.self, forKey: .longitude) {
+            longitude = rawLongitude.isEmpty ? nil : rawLongitude
+            print("📍 Longitude parsed: \(longitude ?? "nil")")
+        } else {
+            longitude = nil
+            print("📍 Longitude missing or failed to decode")
+        }
+        
+        print("✅ Successfully decoded record for angler \(angler), species \(species), date \(date)")
+    }
+    
+    var parsedDate: Date { return date }
+}
+
+struct LegacyID: Decodable {
+    let oid: String
+    enum CodingKeys: String, CodingKey {
+        case oid = "$oid"
+    }
+}
+
+enum StringOrDouble: Decodable {
+    case string(String), double(Double)
+    
+    var asDouble: Double? {
+        switch self {
+        case .string(let str): return Double(str)
+        case .double(let dbl): return dbl
+        }
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let dbl = try? container.decode(Double.self) {
+            self = .double(dbl)
+        } else if let str = try? container.decode(String.self) {
+            self = .string(str)
+        } else {
+            throw DecodingError.typeMismatch(StringOrDouble.self, .init(codingPath: decoder.codingPath, debugDescription: "Expected Double or String"))
+        }
+    }
+}
+
+// MARK: - Migration Manager
+
+class MigrationManager {
+    private let context: ModelContext
+    var speciesMap: [String: Species] = [:]
+    var reservoirMap: [String: Reservoir] = [:]
+    var tripMap: [String: Trip] = [:] // Key = "YYYY-MM-DD-ReservoirName"
+    
+    init(context: ModelContext) {
+        self.context = context
+    }
+    
+    func decodeLegacyRecords(from data: Data) -> [LegacyFishRecord] {
+        var validRecords: [LegacyFishRecord] = []
+        guard let rawArray = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {
+            print("❌ JSON root is not an array of dictionaries")
+            return []
+        }
+        
+        let decoder = JSONDecoder()
+        for (index, rawObject) in rawArray.enumerated() {
+            do {
+                let rawData = try JSONSerialization.data(withJSONObject: rawObject, options: [])
+                let record = try decoder.decode(LegacyFishRecord.self, from: rawData)
+                validRecords.append(record)
+            } catch {
+                print("❌ Failed to decode record at index \(index): \(error.localizedDescription)")
+                if let rawData = try? JSONSerialization.data(withJSONObject: rawObject, options: [.prettyPrinted]),
+                   let rawJSON = String(data: rawData, encoding: .utf8) {
+                    print("🔍 Raw Record:\n\(rawJSON)")
+                }
+            }
+        }
+        
+        print("📄 Successfully decoded \(validRecords.count) of \(rawArray.count) legacy records")
+        return validRecords
+    }
+    
+    func migrate(records: [LegacyFishRecord]) {
+        let groupedByTripKey = Dictionary(grouping: records) {
+            tripKeyFor(date: $0.date, reservoirName: $0.reservoir)
+        }
+        
+        for (tripKey, groupedRecords) in groupedByTripKey {
+            guard let first = groupedRecords.first else { continue }
+            
+            let tripStart = floorDateToDay(first.date)
+            let reservoir = resolveReservoir(first.reservoir)
+            
+            // Resolve all distinct anglers for this trip
+            let anglers: [Angler] = Array(Set(groupedRecords.map { resolveAngler($0.angler) }))
+            
+            let trip = Trip(
+                startTime: tripStart,
+                anglers: anglers,
+                notes: nil,
+                reservoir: reservoir,
+                migrated: true,
+                dataVersion: 1
+            )
+            context.insert(trip)
+            tripMap[tripKey] = trip
+            reservoir.trips.append(trip)
+            
+            for record in groupedRecords {
+                guard let weight = record.weight.asDouble else {
+                    print("Skipping record with invalid weight: \(record.weight)")
+                    continue
+                }
+                
+                let latitude = Double(record.latitude ?? "")
+                let longitude = Double(record.longitude ?? "")
+                let imagePath = (record.image?.isEmpty == false) ? record.image : nil
+                let comment = (record.comment?.isEmpty == false) ? record.comment : nil
+                
+                let species = resolveSpecies(record.species)
+                let angler = resolveAngler(record.angler)
+                
+                let catchItem = FishCatch(
+                    timestamp: record.date,
+                    weight: weight,
+                    latitude: latitude,
+                    longitude: longitude,
+                    imagePath: imagePath,
+                    trip: trip,
+                    species: species,
+                    angler: angler
+                )
+                
+                context.insert(catchItem)
+            }
+        }
+        
+        print("✅ Migration complete: \(tripMap.count) trips, \(anglerMap.count) anglers, \(speciesMap.count) species.")
+    }
+
+    
+    private func parseDate(_ dateStr: String) -> Date? {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = isoFormatter.date(from: dateStr) { return date }
+        
+        let isoFormatterNoMillis = ISO8601DateFormatter()
+        isoFormatterNoMillis.formatOptions = [.withInternetDateTime]
+        if let date = isoFormatterNoMillis.date(from: dateStr) { return date }
+        
+        let legacyFormatter = DateFormatter()
+        legacyFormatter.dateFormat = "M/d/yyyy"
+        legacyFormatter.timeZone = .current
+        if let date = legacyFormatter.date(from: dateStr) {
+            var calendar = Calendar.current
+            calendar.timeZone = .current
+            var components = calendar.dateComponents([.year, .month, .day], from: date)
+            components.hour = 12
+            return calendar.date(from: components)
+        }
+        
+        return nil
+    }
+    
+    private func tripKeyFor(date: Date, reservoirName: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return "\(formatter.string(from: date))-\(reservoirName)"
+    }
+    
+    private func floorDateToDay(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        return calendar.date(from: components) ?? date
+    }
+    
+    private func resolveAngler(_ name: String) -> Angler {
+        if let existing = anglerMap[name] {
+            return existing
+        } else {
+            let new = Angler(name: name)
+            anglerMap[name] = new
+            context.insert(new)
+            return new
+        }
+    }
+    
+    private func resolveSpecies(_ name: String) -> Species {
+        if let existing = speciesMap[name] {
+            return existing
+        } else {
+            let new = Species(name: name)
+            speciesMap[name] = new
+            context.insert(new)
+            return new
+        }
+    }
+    
+    private func resolveReservoir(_ name: String) -> Reservoir {
+        if let existing = reservoirMap[name] {
+            return existing
+        } else {
+            let new = Reservoir(name: name)
+            reservoirMap[name] = new
+            context.insert(new)
+            return new
+        }
+    }
+
+}
