@@ -21,30 +21,9 @@
 		2CF438AD2FF5BD73007CC4F3 /* CatchVaultTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CatchVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		2CF438B72FF5BD7F007CC4F3 /* Exceptions for "CatchVault" folder in "CatchVault" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Domain/ModelRelationshipTests.swift,
-			);
-			target = 2CF438742FF59D80007CC4F3 /* CatchVault */;
-		};
-		2CF438B82FF5BD7F007CC4F3 /* Exceptions for "CatchVault" folder in "CatchVaultTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Domain/ModelRelationshipTests.swift,
-			);
-			target = 2CF438AC2FF5BD73007CC4F3 /* CatchVaultTests */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2CF438772FF59D80007CC4F3 /* CatchVault */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				2CF438B72FF5BD7F007CC4F3 /* Exceptions for "CatchVault" folder in "CatchVault" target */,
-				2CF438B82FF5BD7F007CC4F3 /* Exceptions for "CatchVault" folder in "CatchVaultTests" target */,
-			);
 			path = CatchVault;
 			sourceTree = "<group>";
 		};
