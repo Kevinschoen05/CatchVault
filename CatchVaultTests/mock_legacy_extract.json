@@ -1,0 +1,202 @@
+[
+    {
+        "_id": {
+          "$oid": "6266ecd416f3b10016920f9b"
+        },
+        "date": {
+          "$date": "2022-04-25T18:47:47.461Z"
+        },
+        "image": "",
+        "species": "Pickerel",
+        "angler": "Jim",
+        "weight": 0.11,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "41.250837869049285",
+        "longitude": "-73.73875362805438",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6266efb616f3b10016920f9c"
+        },
+        "date": {
+          "$date": "2022-04-25T18:47:47.461Z"
+        },
+        "image": "",
+        "species": "Sunny",
+        "angler": "Jim",
+        "weight": 0.02,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "41.250790678934415",
+        "longitude": "-73.73867534107873",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6266f14116f3b10016920f9d"
+        },
+        "date": {
+          "$date": "2022-04-25T18:47:47.461Z"
+        },
+        "image": "",
+        "species": "White Perch",
+        "angler": "Jim",
+        "weight": 2.06,
+        "reservoir": "Muscoot",
+        "comment": "",
+        "latitude": "41.23293932805116",
+        "longitude": "-73.73864081626155",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6266f18e16f3b10016920f9e"
+        },
+        "date": {
+          "$date": "2022-04-25T18:47:47.461Z"
+        },
+        "image": "",
+        "species": "White Perch",
+        "angler": "Jim",
+        "weight": 2.06,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "41.25070635698852",
+        "longitude": "-73.7389130518527",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "626c4bcf53acdf00163fd05d"
+        },
+        "date": {
+          "$date": "2022-04-29T20:34:22.052Z"
+        },
+        "image": "",
+        "species": "Large Mouth Bass",
+        "angler": "Jim",
+        "weight": 2.04,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "41.25078405723092",
+        "longitude": "-73.73875404714954",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "626e7d689c36710016077234"
+        },
+        "date": {
+          "$date": "2022-05-01T12:30:29.937Z"
+        },
+        "image": "",
+        "species": "Pickerel",
+        "angler": "Carlo",
+        "weight": 2.11,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "41.248866403513816",
+        "longitude": "-73.7387195975275",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6271854d1f62b100166bae1b"
+        },
+        "date": {
+          "$date": "2022-05-03T19:19:55.706Z"
+        },
+        "image": "",
+        "species": "Large Mouth Bass",
+        "angler": "Matt",
+        "weight": 1.1,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "",
+        "longitude": "",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "62719940a8eb160016f0a2fb"
+        },
+        "date": {
+          "$date": "2022-05-03T21:03:58.502Z"
+        },
+        "image": "",
+        "species": "Perch",
+        "angler": "Matt",
+        "weight": 1.1,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "",
+        "longitude": "",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6272dedc142b240016b3aea7"
+        },
+        "date": {
+          "$date": "2022-05-04T20:15:22.594Z"
+        },
+        "image": "",
+        "species": "Crappie",
+        "angler": "Jim",
+        "weight": 0.07,
+        "reservoir": "Croton",
+        "comment": "",
+        "latitude": "41.25133114405093",
+        "longitude": "-73.73259569525135",
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "61df235df845f2de7a5cfbc6"
+        },
+        "date": "3/13/2016",
+        "species": "Large Mouth Bass",
+        "reservoir": "Muscoot",
+        "angler": "Jim",
+        "weight": "0.75",
+        "latitude": "",
+        "longitude": ""
+      },
+      {
+          "_id": {
+              "$oid": "680a74d3ae73e600148af527"
+          },
+          "date": {
+              "$date": "2025-04-24T17:28:49.595Z"
+          },
+          "image": "",
+          "species": "Pickerel",
+          "angler": "Jim",
+          "weight": 1.8,
+          "reservoir": "Muscoot",
+          "comment": "",
+          "latitude": "41.27116614487863",
+          "longitude": "-73.71716974163971",
+          "__v": 0
+      },
+      {
+          "_id": {
+              "$oid": "680a75c3ae73e600148af528"
+          },
+          "date": {
+              "$date": "2025-04-24T17:28:49.595Z"
+          },
+          "image": "",
+          "species": "Large Mouth Bass",
+          "angler": "Jim",
+          "weight": 1.01,
+          "reservoir": "Muscoot",
+          "comment": "",
+          "latitude": "41.27023069130501",
+          "longitude": "-73.71940235361838",
+          "__v": 0
+      }
+      
+    ]
