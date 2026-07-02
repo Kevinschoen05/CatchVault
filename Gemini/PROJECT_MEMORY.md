@@ -3,7 +3,7 @@
 ## 1. System Intent & Mission
 - **Objective**: Evolve a 5-year-old production web application ("Reservoir Fishing") into an optimized, local-first, native iOS application built with SwiftUI and SwiftData.
 - **Key Vectors**:
-  - Leverage native hardware & platform capabilities (MapKit, local notifications, timers, push notifications).
+  - Leverage native hardware & platform capabilities (MapKit, local notifications, background timers, push notifications).
   - Modernize and optimize the UI/UX using a strict declarative, state-driven paradigm.
   - Implement a highly resilient, offline-ready local database configuration mapped cleanly to iCloud via CloudKit.
 
@@ -24,8 +24,14 @@ The project state is governed by six core reference files, which serve as our ab
 ## 4. Completed Milestones & Architectural History
 ### 🟩 Milestone 1: Core Domain Engine Build (Completed)
 - **1.1 Entity Layout Initialization**: Created the five baseline SwiftData files in `Domain/Models/`: `Angler.swift`, `Reservoir.swift`, `Species.swift`, `Trip.swift`, and `FishCatch.swift`.
-- **1.2 Relationship & CloudKit Rule Enforcement**: Applied explicit `@Relationship(inverse: ...)` macro ownership chains to guarantee CloudKit mirroring safety. Discovered and resolved a macro generation bottleneck caused by reciprocal structural cycles between `Trip` and `Angler`. Standardized by designating `Trip` as the explicit owner of cluster collection graphs, keeping property definitions clean and eliminating compiler ambiguity.
+- **1.2 Relationship & CloudKit Rule Enforcement**: Applied explicit `@Relationship(inverse: ...)` macro ownership chains to guarantee CloudKit mirroring safety. Resolved a macro generation bottleneck caused by reciprocal structural cycles between `Trip` and `Angler` by designating `Trip` as the explicit owner of cluster collection graphs.
 - **1.3 Cascade Validation Layer**: Established the automated test oracle using a dedicated unit testing target (`CatchVaultTests`). Authored schema integration tests executing in isolated memory configurations to verify that delete policies (`.cascade` for `Trip` ↔ `FishCatch` and `.nullify` for remaining paths) protect structural graph integrity without creating orphan states.
+
+### 🟩 Milestone 2: Data Ingestion Pipeline / Anti-Corruption Bridge (Completed)
+- **2.1 Legacy Payload Decoders**: Designed and implemented polymorphic Swift `Decodable` models under `Features/Migration/Models/` capable of ingesting highly inconsistent raw JSON fragments from production MongoDB exports. Integrated a robust structural wrapper `StringOrDouble` to safely translate string-wrapped integers/doubles or explicit double metrics into deterministic Swift representations. 
+- **2.2 Deterministic Trip Aggregator**: Developed token-generation logic that groups separate floating legacy catch entries into single parent `Trip` occurrences. The unique token architecture tracks data boundaries using a composite dictionary structural layout rule matching `YYYY-MM-DD-ReservoirName`, mapping synthetic multi-angler single-day trip realities seamlessly.
+- **2.3 Chunked Migration Executor**: Realized the core standalone `MigrationManager` pipeline. Ingestion mechanisms process data in bounded, transactionally complete memory batches, explicitly triggering intermediate `try context.save()` save points. Memory heaps are freed proactively during large payloads, preventing stack overflows or state corruptions on old target devices.
+- **2.4 Ingestion Telemetry Invariants & Verification**: Verified the entire extraction block with an end-to-end integration test runner against production data records. Tests confirmed that input text fields (`Angler.name`, `Reservoir.name`, and `Species.name`) successfully bypass duplicate entries by running a case-insensitive trim verification scanner directly inside the active `ModelContext` layout prior to disk commit.
 
 ## 5. Core Domain Entities & Schema Analysis
 ### Target Data Model (SwiftData Graph)
@@ -36,12 +42,11 @@ The project state is governed by six core reference files, which serve as our ab
 - **Trip**: Tracks a distinct fishing session over time, bundling multiple `FishCatch` entries. Contains synthetic weather parameters and telemetry.
 
 ## 6. Current Engineering Constraints & Critical Paths
-### The Trip Synthesis State Strategy
-- **Legacy Behavior**: The original application had no explicit schema representation for a "Trip". Users logged fish immediately at the moment of catch, making the trip concept entirely a UI-driven presentation layer.
-- **Deterministic Grouping Rule**: The `MigrationManager` grouping strategy maps a "Trip" per calendar day, per unique reservoir, per angler.
-- **Key Generation**: Synthetic trips are evaluated against a composite dictionary token pattern: `YYYY-MM-DD-ReservoirName`. Subsequent catches matching this token are dynamically grouped into the same parent `Trip` entry during data ingestion.
+### Post-Migration Database Status
+- The local database state has transitioned from an unparsed flat JSON history to a heavily normalized relational SwiftData engine graph.
+- The one-time cutover initialization rule is securely locked inside app launch setups, driven by a `UserDefaults` token to guarantee idempotency and guard against multi-trigger ingest hazards.
 
-### Data Ingestion and Parsing Hazards (Active Focus for Milestone 2)
-- **Coordinates**: Legacy latitude and longitude parameters are un-sanitized strings (often empty `""`). The migration layer must convert these into optional Swift `Double` values safely.
-- **Weights**: Legacy weight data variations require polymorphic decoding handling (handling both string-wrapped integers/doubles and raw numeric structures via a specialized `StringOrDouble` enum wrapper).
-- **Deduplication Constraint**: Inputs targeted at `Angler.name`, `Reservoir.name`, and `Species.name` undergo case-insensitive validation lookups in the active `ModelContext` before execution writes commit to storage.
+### Active Target Path (Milestone 3: Presentation Core Architecture)
+- **3.1 Global Foundation & Spacing**: Instantiating static architectural styles for global design compliance. Reifying font metrics and size standards defined inside `STYLE_GUIDE.md`.
+- **3.2 Custom UI Container Structure**: Deploying structural `CVCardContainer` templates across user environments to preserve layout canvas symmetries.
+- **3.3 Infrastructure Service Proxies**: Engineering the `CoreLocation` device tracking hooks and setting up external telemetry serialization bridges.
