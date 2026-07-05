@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2C47E6422FFAF32F00815008 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 2C47E6412FFAF32500815008 /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		2CF438B12FF5BD73007CC4F3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -17,6 +21,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2C47E6412FFAF32500815008 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2CF438752FF59D80007CC4F3 /* CatchVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CatchVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CF438AD2FF5BD73007CC4F3 /* CatchVaultTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CatchVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -58,6 +63,7 @@
 				2CF438772FF59D80007CC4F3 /* CatchVault */,
 				2CF438AE2FF5BD73007CC4F3 /* CatchVaultTests */,
 				2CF438762FF59D80007CC4F3 /* Products */,
+				2C47E6412FFAF32500815008 /* .gitignore */,
 			);
 			sourceTree = "<group>";
 		};
@@ -162,6 +168,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C47E6422FFAF32F00815008 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
