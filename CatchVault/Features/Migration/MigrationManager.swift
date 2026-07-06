@@ -1,44 +1,27 @@
-//
-//  MigrationManager.swift
-//  CatchVault
-//
-//  Created by Kevin Schoen on 7/2/26.
-//
 import Foundation
 import SwiftData
 
 /// An execution facility serving as the system's Anti-Corruption Layer (ACL).
-/// Parses flat, historical records from a production MongoDB export and materializes
-/// a normalized relational object graph within SwiftData.
+/// Materializes a normalized relational object graph from clean design-time JSON.
 public final class MigrationManager {
     private let context: ModelContext
     
-    // In-memory lookups to preserve identity uniqueness and minimize query pollution
+    // Efficient in-memory maps to guarantee deduplication and identity truth
     private var anglerMap: [String: Angler] = [:]
     private var speciesMap: [String: Species] = [:]
     private var reservoirMap: [String: Reservoir] = [:]
-    private var tripMap: [String: Trip] = [:] // Key format: YYYY-MM-DD-ReservoirNormalizedName
+    private var tripMap: [String: Trip] = [:] // Key format: YYYY-MM-DD-ReservoirName (Case-Insensitive)
     
-    /// Date formatter to interpret standard historical MongoDB $date extended variants.
     private let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
     
-    /// Fallback formatter for secondary legacy string variations (e.g., M/d/yyyy format specs).
-    private let legacyDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d/yyyy"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter
-    }()
-    
-    /// String formatter used to synthesize deterministic calendar tokens relative to UTC.
-    private let tokenDateFormatter: DateFormatter = {
+    private let tokenFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0) // Enforce absolute UTC boundaries
         return formatter
     }()
     
@@ -46,190 +29,115 @@ public final class MigrationManager {
         self.context = context
     }
     
-    /// Ingests a JSON data payload from an embedded source asset, maps relationships,
-    /// logs diagnostic invariants, and commits the mutation graph to the storage database.
-    /// - Parameter data: Raw data bytes containing the JSON historical collection array.
-    /// - Throws: Core execution or database persistence failures.
-    public func migrate(from data: Data) throws {
-        let decoder = JSONDecoder()
-        let payloads: [LegacyPayload]
+    /// Entrypoint invoking the transactional ingestion loop.
+    public func migrate(from records: [LegacyFishRecord]) throws {
+        // Clear any residual lookups to maintain deterministic integrity per run
+        anglerMap.removeAll()
+        speciesMap.removeAll()
+        reservoirMap.removeAll()
+        tripMap.removeAll()
         
-        do {
-            payloads = try decoder.decode([LegacyPayload].self, from: data)
-        } catch {
-            print("[CRITICAL MIGRATION ERROR] Root payload decoding failed structurally: \(error)")
-            throw error
-        }
-        
-        print("[MIGRATION ADVANCEMENT] Extracted \(payloads.count) payload lines from source snapshot data. Processing pipeline running...")
-        
-        var successfulIngestionCount = 0
-        var telemetrySkippedCoordinateCount = 0
-        
-        for (index, payload) in payloads.enumerated() {
-            let recordID = payload.id.oid
+        for record in records {
+            // 1. Resolve exact primitive timestamp boundaries safely
+            guard let timestamp = isoFormatter.date(from: record.date) else { continue }
             
-            // --- Constraint Check 1: Polymorphic Timestamp Translation ---
-            guard let catchTimestamp = parseLegacyDate(payload.date.dateString) else {
-                print("[DIAGNOSTIC ERROR] Line index \(index) | Document ID: \(recordID) -> Flag: Unparseable date token value ('\(payload.date.dateString)'). Skipping sequence.")
-                continue
-            }
+            // 2. Resolve or create unique Lookup Dimension Objects
+            let angler = resolveAngler(named: record.angler)
+            let reservoir = resolveReservoir(named: record.reservoir)
+            let species = resolveSpecies(named: record.species)
             
-            // --- Constraint Check 2: Core Identifier Validation ---
-            let rawAngler = payload.angler.trimmingCharacters(in: .whitespacesAndNewlines)
-            let rawReservoir = payload.reservoir.trimmingCharacters(in: .whitespacesAndNewlines)
-            let rawSpecies = payload.species.trimmingCharacters(in: .whitespacesAndNewlines)
+            // 3. Resolve or create the parent Synthetic Trip domain session
+            let dateToken = tokenFormatter.string(from: timestamp)
+            let trip = resolveTrip(dateToken: dateToken, timestamp: timestamp, reservoir: reservoir, angler: angler)
             
-            if rawAngler.isEmpty || rawReservoir.isEmpty || rawSpecies.isEmpty {
-                print("[DIAGNOSTIC ERROR] Line index \(index) | Document ID: \(recordID) -> Flag: Incomplete structural definitions (Angler: '\(rawAngler)', Reservoir: '\(rawReservoir)', Species: '\(rawSpecies)'). Skipping sequence.")
-                continue
-            }
+            // 4. Safely handle optional geometric coordinates from blank text strings
+            let latValue = Double(record.latitude.trimmingCharacters(in: .whitespacesAndNewlines))
+            let lonValue = Double(record.longitude.trimmingCharacters(in: .whitespacesAndNewlines))
             
-            // --- Constraint Check 3: Polymorphic Weight Extraction ---
-            guard let parsedWeight = payload.weight.parsedDouble, parsedWeight > 0 else {
-                print("[DIAGNOSTIC ERROR] Line index \(index) | Document ID: \(recordID) -> Flag: Weight metric violation format. Skipping sequence.")
-                continue
-            }
-            
-            // --- Normalization Phase: Case-Insensitive Deduplication ---
-            let normalizedAnglerKey = rawAngler.lowercased()
-            let normalizedReservoirKey = rawReservoir.lowercased()
-            let normalizedSpeciesKey = rawSpecies.lowercased()
-            
-            let targetAngler = fetchOrInitializeAngler(named: rawAngler, key: normalizedAnglerKey)
-            let targetReservoir = fetchOrInitializeReservoir(named: rawReservoir, key: normalizedReservoirKey)
-            let targetSpecies = fetchOrInitializeSpecies(named: rawSpecies, key: normalizedSpeciesKey)
-            
-            // --- Synthetic Relationship Structuring: Trip Cluster Bridge ---
-            let calendarToken = tokenDateFormatter.string(from: catchTimestamp)
-            let tripCompositeKey = "\(calendarToken)-\(normalizedReservoirKey)"
-            
-            let targetTrip = fetchOrInitializeTrip(
-                compositeKey: tripCompositeKey,
-                dateToken: calendarToken,
-                timestamp: catchTimestamp,
-                reservoir: targetReservoir,
-                angler: targetAngler
-            )
-            
-            // --- Telemetry Invariants Check: Coordinates Processing ---
-            var finalLatitude: Double? = nil
-            var finalLongitude: Double? = nil
-            
-            if let latStr = payload.latitude?.trimmingCharacters(in: .whitespacesAndNewlines),
-               let lonStr = payload.longitude?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !latStr.isEmpty, !lonStr.isEmpty {
-                if let latVal = Double(latStr), let lonVal = Double(lonStr) {
-                    finalLatitude = latVal
-                    finalLongitude = lonVal
-                } else {
-                    telemetrySkippedCoordinateCount += 1
-                }
-            }
-            
-            // --- Footprint Minimization: Optional Parameter Refinement ---
-            let finalComment = payload.comment?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? payload.comment : nil
-            let finalImagePath = payload.image?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? payload.image : nil
-            
-            // --- Instantiation & Relational Insertion Graph Execution ---
+            // 5. Build and persist child FishCatch instance using its designated initializer
             let newCatch = FishCatch(
-                timestamp: catchTimestamp,
-                weight: parsedWeight,
-                latitude: finalLatitude,
-                longitude: finalLongitude,
-                imagePath: finalImagePath,
-                comment: finalComment
+                id: UUID(),
+                timestamp: timestamp,
+                weight: record.weight,
+                latitude: latValue,
+                longitude: lonValue,
+                imagePath: record.image.isEmpty ? nil : record.image,
+                comment: record.comment.isEmpty ? nil : record.comment
             )
             
-            // Establish explicit macro ownership mappings
-            newCatch.angler = targetAngler
-            newCatch.species = targetSpecies
-            newCatch.trip = targetTrip
+            // 6. Hook up formal relational paths matching macro inverse configurations
+            newCatch.trip = trip
+            newCatch.angler = angler
+            newCatch.species = species
+            
+            // Update relationships explicitly on collections to prevent structural relationship faults
+            trip.catches.append(newCatch)
             
             context.insert(newCatch)
-            successfulIngestionCount += 1
         }
         
-        // --- Structural Database Finalization Block ---
-        do {
-            try context.save()
-            print("[MIGRATION PIPELINE SUCCESS] Committed transaction. recordsLoaded: \(successfulIngestionCount) | telemetryMismatchesDropped: \(telemetrySkippedCoordinateCount) | totalAttempted: \(payloads.count)")
-        } catch {
-            print("[CRITICAL WRITE ERROR] SwiftData transaction checkpoint execution context failed to persist to SQLite storage disk: \(error)")
-            throw error
-        }
+        // Save at transaction completion point to avoid partial state corruption
+        try context.save()
     }
     
-    // MARK: - Internal Domain Helper Resolvers
+    // MARK: - Dimension Resolvers
     
-    private func parseLegacyDate(_ sourceString: String) -> Date? {
-        let cleanToken = sourceString.trimimmingCharacters(in: .whitespacesAndNewlines)
-        if let parsedISO = isoFormatter.date(from: cleanToken) {
-            return parsedISO
-        }
-        return legacyDateFormatter.date(from: cleanToken)
-    }
-    
-    private func fetchOrInitializeAngler(named name: String, key: String) -> Angler {
-        if let activeRef = anglerMap[key] { return activeRef }
+    private func resolveAngler(named name: String) -> Angler {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lookupKey = cleanName.lowercased()
+        if let existing = anglerMap[lookupKey] { return existing }
         
-        let newAngler = Angler(name: name)
+        // Pass the required name property directly into the designated constructor
+        let newAngler = Angler(id: UUID(), name: cleanName)
         context.insert(newAngler)
-        anglerMap[key] = newAngler
+        anglerMap[lookupKey] = newAngler
         return newAngler
     }
     
-    private func fetchOrInitializeReservoir(named name: String, key: String) -> Reservoir {
-        if let activeRef = reservoirMap[key] { return activeRef }
+    private func resolveReservoir(named name: String) -> Reservoir {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lookupKey = cleanName.lowercased()
+        if let existing = reservoirMap[lookupKey] { return existing }
         
-        let newReservoir = Reservoir(name: name)
+        // Pass the required name property directly into the designated constructor
+        let newReservoir = Reservoir(id: UUID(), name: cleanName)
         context.insert(newReservoir)
-        reservoirMap[key] = newReservoir
+        reservoirMap[lookupKey] = newReservoir
         return newReservoir
     }
     
-    private func fetchOrInitializeSpecies(named name: String, key: String) -> Species {
-        if let activeRef = speciesMap[key] { return activeRef }
+    private func resolveSpecies(named name: String) -> Species {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lookupKey = cleanName.lowercased()
+        if let existing = speciesMap[lookupKey] { return existing }
         
-        let newSpecies = Species(name: name)
+        // Pass the required name property directly into the designated constructor
+        let newSpecies = Species(id: UUID(), name: cleanName)
         context.insert(newSpecies)
-        speciesMap[key] = newSpecies
+        speciesMap[lookupKey] = newSpecies
         return newSpecies
     }
     
-    private func fetchOrInitializeTrip(compositeKey: String, dateToken: String, timestamp: Date, reservoir: Reservoir, angler: Angler) -> Trip {
-        if let activeRef = tripMap[compositeKey] {
-            // Append missing participant links if an alternate angler shares the group session window
-            if !activeRef.anglers.contains(where: { $0.id == angler.id }) {
-                activeRef.anglers.append(angler)
+    private func resolveTrip(dateToken: String, timestamp: Date, reservoir: Reservoir, angler: Angler) -> Trip {
+        let compositeKey = "\(dateToken)-\(reservoir.name.lowercased())"
+        
+        if let existingTrip = tripMap[compositeKey] {
+            // Ensure the angler is recorded as a participant in the shared daily trip session
+            if !existingTrip.anglers.contains(where: { $0.id == angler.id }) {
+                existingTrip.anglers.append(angler)
             }
-            return activeRef
+            return existingTrip
         }
         
-        // Form a standalone Trip window bound strictly to the target calendar group day window
-        guard let groupBaseStart = legacyDateFormatter.date(from: dateToken) else {
-            // Safe fallback configuration using historical extraction point timestamps
-            let newTrip = Trip(id: UUID(), startTime: timestamp, migrated: true, dataVersion: 1)
-            newTrip.reservoir = reservoir
-            newTrip.anglers.append(angler)
-            context.insert(newTrip)
-            tripMap[compositeKey] = newTrip
-            return newTrip
-        }
+        // Create a parent trip bound to the start of that day's absolute UTC boundary
+        let tripStart = tokenFormatter.date(from: dateToken) ?? timestamp
         
-        let newTrip = Trip(id: UUID(), startTime: groupBaseStart, migrated: true, dataVersion: 1)
+        let newTrip = Trip(id: UUID(), startTime: tripStart, migrated: true, dataVersion: 1)
         newTrip.reservoir = reservoir
         newTrip.anglers.append(angler)
         
         context.insert(newTrip)
         tripMap[compositeKey] = newTrip
         return newTrip
-    }
-}
-
-// Private expansion to provide clean string sanitation helpers
-private extension String {
-    func trimimmingCharacters(in set: CharacterSet) -> String {
-        return self.trimmingCharacters(in: set)
     }
 }
