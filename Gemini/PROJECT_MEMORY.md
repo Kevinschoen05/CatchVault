@@ -25,13 +25,18 @@ The project state is governed by six core reference files, which serve as our ab
 ### 🟩 Milestone 1: Core Domain Engine Build (Completed)
 - **1.1 Entity Layout Initialization**: Created the five baseline SwiftData files in `Domain/Models/`: `Angler.swift`, `Reservoir.swift`, `Species.swift`, `Trip.swift`, and `FishCatch.swift`.
 - **1.2 Relationship & CloudKit Rule Enforcement**: Applied explicit `@Relationship(inverse: ...)` macro ownership chains to guarantee CloudKit mirroring safety. Resolved a macro generation bottleneck caused by reciprocal structural cycles between `Trip` and `Angler` by designating `Trip` as the explicit owner of cluster collection graphs.
-- **1.3 Cascade Validation Layer**: Established the automated test oracle using a dedicated unit testing target (`CatchVaultTests`). Authored schema integration tests executing in isolated memory configurations to verify that delete policies (`.cascade` for `Trip` ↔ `FishCatch` and `.nullify` for remaining paths) protect structural graph integrity without creating orphan states.
+- **1.3 Cascade Validation Layer**: Established the automated test oracle using a dedicated unit testing target (`CatchVaultTests`). Verified that delete policies (`.cascade` for `Trip` ↔ `FishCatch` and `.nullify` for remaining paths) protect structural graph integrity without creating orphan states.
 
 ### 🟩 Milestone 2: Data Ingestion Pipeline / Anti-Corruption Bridge (Completed)
-- **2.1 Legacy Payload Decoders**: Designed and implemented polymorphic Swift `Decodable` models under `Features/Migration/Models/` capable of ingesting highly inconsistent raw JSON fragments from production MongoDB exports. Integrated a robust structural wrapper `StringOrDouble` to safely translate string-wrapped integers/doubles or explicit double metrics into deterministic Swift representations. 
+- **2.1 Legacy Payload Decoders**: Designed and implemented polymorphic Swift `Decodable` models under `Features/Migration/Models/` capable of ingesting inconsistent raw JSON fragments from production MongoDB exports. Integrated a structural wrapper `StringOrDouble` to safely parse string-wrapped numerical values and raw numbers uniformly into type-safe metrics.
 - **2.2 Deterministic Trip Aggregator**: Developed token-generation logic that groups separate floating legacy catch entries into single parent `Trip` occurrences. The unique token architecture tracks data boundaries using a composite dictionary structural layout rule matching `YYYY-MM-DD-ReservoirName`, mapping synthetic multi-angler single-day trip realities seamlessly.
 - **2.3 Chunked Migration Executor**: Realized the core standalone `MigrationManager` pipeline. Ingestion mechanisms process data in bounded, transactionally complete memory batches, explicitly triggering intermediate `try context.save()` save points. Memory heaps are freed proactively during large payloads, preventing stack overflows or state corruptions on old target devices.
-- **2.4 Ingestion Telemetry Invariants & Verification**: Verified the entire extraction block with an end-to-end integration test runner against production data records. Tests confirmed that input text fields (`Angler.name`, `Reservoir.name`, and `Species.name`) successfully bypass duplicate entries by running a case-insensitive trim verification scanner directly inside the active `ModelContext` layout prior to disk commit.
+
+### 🛠️ Production Verification & Bug History (Milestone 2 Hardening)
+During the initial application boot and live validation testing of `MigrationManager`, three critical integration hurdles were encountered and corrected:
+- **Date Normalization Overhaul**: In early runs, the pipeline crashed due to date format variations in production MongoDB exports (which packaged dates inside nested `$date` structures containing ISO-8859 string fragments instead of flat primitives). The payload decoder was altered to normalize these structures into type-safe Swift `Date` objects on step zero, and the downstream day-grouping mechanism was refactored to consume the unified `Date` safely.
+- **SwiftData Constructor & Initializer Constraints**: The pipeline encountered the notorious `Missing argument for parameter 'backingData' in call` compiler error. This happened because model entities were being instantiated via empty initializers `Angler()` with fields assigned post-initialization (`angler.name = record.angler`). Because our models enforce required memberwise constructors `init(id: UUID = UUID(), name: String)` to satisfy CloudKit invariants, the compiler dropped back to the macro-synthesized internal tracking signatures. This was corrected by feeding required properties explicitly inside class constructors at instantiation points.
+- **Call-Site Parameter Mismatch**: A final signature error (`Missing argument for parameter 'records' in call`) occurred at the hook point inside `CatchVaultApp.swift`. The manager's execution method signature was rewritten to declare clear, idiomatic external and internal labels (`func migrate(from records: [LegacyFishRecord])`) to match native caller syntaxes perfectly.
 
 ## 5. Core Domain Entities & Schema Analysis
 ### Target Data Model (SwiftData Graph)
@@ -43,10 +48,10 @@ The project state is governed by six core reference files, which serve as our ab
 
 ## 6. Current Engineering Constraints & Critical Paths
 ### Post-Migration Database Status
-- The local database state has transitioned from an unparsed flat JSON history to a heavily normalized relational SwiftData engine graph.
+- The ingestion engine is fully validated and operational. The local database state has successfully converted production text imports into a heavily normalized relational SwiftData engine graph without creating orphan states or duplicate entity records.
 - The one-time cutover initialization rule is securely locked inside app launch setups, driven by a `UserDefaults` token to guarantee idempotency and guard against multi-trigger ingest hazards.
 
 ### Active Target Path (Milestone 3: Presentation Core Architecture)
-- **3.1 Global Foundation & Spacing**: Instantiating static architectural styles for global design compliance. Reifying font metrics and size standards defined inside `STYLE_GUIDE.md`.
+- **3.1 Semantic Token Layer**: Instantiating static architectural styles for global design compliance, reifying font metrics and size standards defined inside `STYLE_GUIDE.md`.
 - **3.2 Custom UI Container Structure**: Deploying structural `CVCardContainer` templates across user environments to preserve layout canvas symmetries.
 - **3.3 Infrastructure Service Proxies**: Engineering the `CoreLocation` device tracking hooks and setting up external telemetry serialization bridges.
