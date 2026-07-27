@@ -1,0 +1,45 @@
+Token Name: brandAccent
+Light Mode Hex: #D97706
+Dark Mode Hex: #F59E0B
+Purpose: 
+
+Token Name: brandPrimary
+Light Mode Hex: #1A2E40
+Dark Mode Hex: #2C4A5E
+Purpose: 
+
+Token Name: surfaceCard
+Light Mode Hex: #D8CFB3
+Dark Mode Hex: #B4B2A5
+Purpose:
+
+Token Name: surfacePrimary
+Light Mode Hex: #F2F2F7
+Dark Mode Hex: #000000
+Purpose:
+
+Token Name: surfaceSecondary
+Light Mode Hex: #FFFFFF
+Dark Mode Hex: #1C1C1E
+Purpose:
+
+Token Name: surfaceTertiary
+Light Mode Hex: #E5E5EA
+Dark Mode Hex: #2C2C2E
+Purpose:
+
+
+<-- Alternatives --> 
+Token Name: TileForest
+Light Mode Hex: #2F583C
+
+
+Token Name: BackgroundMain
+Light Mode Hex: #1D4D52
+
+Token Name: AccentGold
+Light Mode Hex: #D6A85F
+
+
+
+

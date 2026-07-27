@@ -10,6 +10,8 @@
 
 - Read files in full before making wide-ranging changes, before editing files you have not already fully inspected, and when the user asks you to investigate or audit something. Do not rely only on search snippets for broad changes.
 
+- Before producing any block of code, provide a summary of what you are attempting to create and confirm with the user prior to any code generation
+
 ## Project Memory
 - The PROJECT_MEMORY.md file is the current state of the project and is critical to reference at any decision point. All design choices must be made with respect to the goals and implementation choices defined in the project memory
 

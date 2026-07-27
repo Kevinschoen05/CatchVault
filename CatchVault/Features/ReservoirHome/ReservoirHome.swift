@@ -1,165 +1,219 @@
+//
+//  ReservoirHome.swift
+//  CatchVault
+//
+
 import SwiftUI
 import SwiftData
 
-struct ReservoirHome: View {
+public struct ReservoirHome: View {
     @Environment(\.modelContext) private var modelContext
     
-    // Direct Query Pattern: Listens to the domain models natively
-    @Query(sort: \Reservoir.name, order: .forward) private var reservoirs: [Reservoir]
-    @Query private var trips: [Trip]
+    @Query(sort: \Reservoir.name, order: .forward)
+    private var reservoirs: [Reservoir]
     
-    // Localized Interface Parameters
+    @Query
+    private var allTrips: [Trip]
+    
     @State private var selectedYear: Int? = nil
-    @State private var expandedReservoirID: UUID? = nil
-    @State private var isShowingAddReservoir = false
+    @State private var showingAddReservoir: Bool = false
     
-    // Converted to a computed property to resolve instance lifecycle errors
     private var availableYears: [Int] {
-        let currentYear = Calendar.current.component(.year, from: Date())
-        var years = Set<Int>([currentYear])
-        trips.forEach { years.insert(Calendar.current.component(.year, from: $0.startTime)) }
-        return Array(years).sorted(by: >)
+        let years = allTrips.map { Calendar.current.component(.year, from: $0.startTime) }
+        return Array(Set(years)).sorted(by: >)
     }
     
-    var body: some View {
-        ZStack {
-            Color("surfacePrimary")
-                .ignoresSafeArea()
-            
-            ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(reservoirs) { reservoir in
-                        reservoirTile(for: reservoir)
+    public init() {}
+    
+    public var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.backgroundMain
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 16) {
+                        yearFilterHeader
+                        
+                        if reservoirs.isEmpty {
+                            emptyStateCard
+                        } else {
+                            ForEach(reservoirs) { reservoir in
+                                reservoirTile(for: reservoir)
+                            }
+                        }
+                        
+                        addReservoirButtonCard
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+            }
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Reservoirs")
+                        .font(.headline)
+                        .foregroundStyle(Color.white) // Set your text color here
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: Text("Analytics Dashboard")) {
+                        Image(systemName: "chart.bar.xaxis")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(Color.brandAccent)
+                            .frame(width: 44, height: 44)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddReservoir) {
+                Text("Add Reservoir View")
+            }
+        }
+    }
+    
+    // MARK: - Subviews
+    
+    private var yearFilterHeader: some View {
+        HStack {
+            Menu {
+                Button("All Time") {
+                    selectedYear = nil
+                }
+                
+                ForEach(availableYears, id: \.self) { year in
+                    Button(String(year)) {
+                        selectedYear = year
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(selectedYear != nil ? String(selectedYear!) : "All Time")
+                        .cvFont(CVFont.actionLabel)
+                        .foregroundStyle(Color.white)
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color.white)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.brandAccent)
+                .clipShape(Capsule())
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private func reservoirTile(for reservoir: Reservoir) -> some View {
+        let trips = filteredTrips(for: reservoir)
+        let tripCount = trips.count
+        let fishCount = trips.reduce(0) { $0 + $1.catches.count }
+        
+        return CVCardContainer {
+            VStack(alignment: .leading, spacing: 14) {
+                NavigationLink(destination: Text("Reservoir Details: \(reservoir.name)")) {
+                    HStack {
+                        Text(reservoir.name)
+                            .cvFont(CVFont.sectionHeader)
+                            .foregroundStyle(Color.brandPrimary)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.secondary)
+                    }
+                }
+                
+                Divider()
+                    .background(Color.surfaceTertiary)
+                
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Total Trips")
+                            .cvFont(CVFont.primaryBody)
+                            .foregroundStyle(Color.secondary)
+                        
+                        Spacer()
+                        
+                        Text("\(tripCount)")
+                            .cvFont(CVFont.telemetryMedium)
+                            .foregroundStyle(Color.primary)
                     }
                     
-                    addReservoirStructuralTile
+                    HStack {
+                        Text("Total Fish")
+                            .cvFont(CVFont.primaryBody)
+                            .foregroundStyle(Color.secondary)
+                        
+                        Spacer()
+                        
+                        Text("\(fishCount)")
+                            .cvFont(CVFont.telemetryMedium)
+                            .foregroundStyle(Color.primary)
+                    }
                 }
-                .padding(16)
-            }
-        }
-        .navigationTitle("CatchVault")
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                NavigationLink(destination: Text("Analytics Dashboard View Template")) {
-                    Image(systemName: "chart.bar.xaxis")
-                        .foregroundColor(Color("brandAccent"))
+                
+                NavigationLink(destination: Text("Start Trip at \(reservoir.name)")) {
+                    HStack {
+                        Spacer()
+                        Text("Start Trip")
+                            .cvFont(CVFont.actionLabel)
+                            .foregroundStyle(Color.white)
+                        Spacer()
+                    }
+                    .frame(height: 44)
+                    .background(Color.brandAccent)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                CVYearPicker(selectedYear: $selectedYear, availableYears: availableYears)
-            }
-        }
-        .sheet(isPresented: $isShowingAddReservoir) {
-            Text("Add Reservoir Form Overlay Template")
-                .presentationDetents([.medium])
+            .padding(12)
         }
     }
     
-    @ViewBuilder
-    private func reservoirTile(for reservoir: Reservoir) -> some View {
-        let isExpanded = expandedReservoirID == reservoir.id
-        
-        let filteredTrips = reservoir.trips.filter { trip in
+    private var emptyStateCard: some View {
+        CVCardContainer {
+            VStack(spacing: 8) {
+                Text("No Reservoirs Found")
+                    .cvFont(CVFont.sectionHeader)
+                    .foregroundStyle(Color.primary)
+                
+                Text("Add your first reservoir location below to begin tracking trips and catches.")
+                    .cvFont(CVFont.primaryBody)
+                    .foregroundStyle(Color.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+        }
+    }
+    
+    private var addReservoirButtonCard: some View {
+        CVCardContainer {
+            Button(action: {
+                showingAddReservoir = true
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                    
+                    Text("Add Reservoir")
+                        .cvFont(CVFont.actionLabel)
+                }
+                .foregroundStyle(Color.brandPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+            }
+            .padding(4)
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func filteredTrips(for reservoir: Reservoir) -> [Trip] {
+        reservoir.trips.filter { trip in
             guard let year = selectedYear else { return true }
             return Calendar.current.component(.year, from: trip.startTime) == year
         }
-        
-        // Corrected type constraint: direct array access without optional checking
-        let totalFishCount = filteredTrips.reduce(0) { $0 + $1.catches.count }
-        
-        CVCardContainer {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text(reservoir.name.capitalized)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                }
-                
-                HStack(spacing: 24) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(filteredTrips.count)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text(filteredTrips.count == 1 ? "Total Trip" : "Total Trips")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(totalFishCount)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text("Fish Landed")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                if isExpanded {
-                    VStack(spacing: 8) {
-                        Divider()
-                            .padding(.vertical, 4)
-                        
-                        HStack(spacing: 12) {
-                            NavigationLink(destination: Text("Reservoir Details View Context Target")) {
-                                Text("View Details")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .frame(maxWidth: .infinity, minHeight: 44)
-                                    .background(Color.primary.opacity(0.05))
-                                    .cornerRadius(8)
-                            }
-                            
-                            NavigationLink(destination: Text("Active Trip Workflow View Target")) {
-                                HStack {
-                                    Image(systemName: "play.fill")
-                                    Text("Start Trip")
-                                }
-                                .font(.subheadline)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, minHeight: 44)
-                                .background(Color("brandAccent"))
-                                .cornerRadius(8)
-                            }
-                        }
-                    }
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .top)),
-                        removal: .opacity
-                    ))
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    expandedReservoirID = isExpanded ? nil : reservoir.id
-                }
-            }
-        }
-    }
-    
-    private var addReservoirStructuralTile: some View {
-        Button(action: { isShowingAddReservoir = true }) {
-            HStack(spacing: 8) {
-                Image(systemName: "plus.circle.fill")
-                Text("Add Reservoir")
-                    .fontWeight(.medium)
-            }
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity, minHeight: 70)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [6]))
-                    .background(Color("surfaceSecondary").opacity(0.5))
-            )
-        }
-        .buttonStyle(.plain)
     }
 }
