@@ -27,7 +27,7 @@ public struct CVCardContainer<Content: View>: View {
     public var body: some View {
         content
             .padding(padding)
-            .background(Color.Canvas.surfaceSecondary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
