@@ -54,7 +54,7 @@ public struct ReservoirHome: View {
                 ToolbarItem(placement: .principal) {
                     Text("Reservoirs")
                         .font(.headline)
-                        .foregroundStyle(Color.white) // Set your text color here
+                        .foregroundStyle(Color.white)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(destination: Text("Analytics Dashboard")) {
@@ -67,6 +67,9 @@ public struct ReservoirHome: View {
             }
             .sheet(isPresented: $showingAddReservoir) {
                 Text("Add Reservoir View")
+            }
+            .navigationDestination(for: Reservoir.self) { reservoir in
+                ReservoirDetailsView(reservoir: reservoir)
             }
         }
     }
@@ -111,7 +114,7 @@ public struct ReservoirHome: View {
         
         return CVCardContainer {
             VStack(alignment: .leading, spacing: 14) {
-                NavigationLink(destination: Text("Reservoir Details: \(reservoir.name)")) {
+                NavigationLink(value: reservoir) {
                     HStack {
                         Text(reservoir.name)
                             .cvFont(CVFont.sectionHeader)
