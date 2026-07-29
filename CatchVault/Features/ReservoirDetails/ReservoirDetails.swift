@@ -42,7 +42,10 @@ struct ReservoirDetailsView: View {
             
             ScrollView {
                 VStack(spacing: 16) {
-                    yearFilterSelector
+                    CVYearPicker(
+                        selectedYear: $selectedYear,
+                        availableYears: availableYears
+                    )
                     telemetryCard
                     catchMapPlaceholder
                     startTripButton
@@ -57,8 +60,11 @@ struct ReservoirDetailsView: View {
                 Text("Reservoir Details")
                     .font(.headline)
                     .foregroundStyle(Color.white)
+                    .backgroundStyle(Color.backgroundMain)
             }
         }
+        .toolbarBackground(Color.backgroundMain, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $showingStartTripSheet) {
             Text("Start Trip Sheet (Placeholder)")
         }
@@ -66,36 +72,7 @@ struct ReservoirDetailsView: View {
             Text("Trip Details (Placeholder)")
         }
     }
-    
-    private var yearFilterSelector: some View {
-        HStack {
-            Menu {
-                Button("All Time") {
-                    selectedYear = nil
-                }
-                Divider()
-                ForEach(availableYears, id: \.self) { year in
-                    Button(String(year)) {
-                        selectedYear = year
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(selectedYear.map { String($0) } ?? "All Time")
-                        .font(.subheadline.weight(.semibold))
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.brandAccent)
-                .cornerRadius(12)
-            }
-        }
-        .padding(.horizontal, 4)
-    }
-    
+        
     private var telemetryCard: some View {
         CVCardContainer{
             VStack(spacing: 12) {

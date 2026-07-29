@@ -33,7 +33,10 @@ public struct ReservoirHome: View {
                 
                 ScrollView {
                     VStack(spacing: 16) {
-                        yearFilterHeader
+                        CVYearPicker(
+                            selectedYear: $selectedYear,
+                            availableYears: availableYears
+                        )
                         
                         if reservoirs.isEmpty {
                             emptyStateCard
@@ -65,6 +68,8 @@ public struct ReservoirHome: View {
                     }
                 }
             }
+            .toolbarBackground(Color.backgroundMain, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .sheet(isPresented: $showingAddReservoir) {
                 Text("Add Reservoir View")
             }
@@ -74,38 +79,6 @@ public struct ReservoirHome: View {
         }
     }
     
-    // MARK: - Subviews
-    
-    private var yearFilterHeader: some View {
-        HStack {
-            Menu {
-                Button("All Time") {
-                    selectedYear = nil
-                }
-                
-                ForEach(availableYears, id: \.self) { year in
-                    Button(String(year)) {
-                        selectedYear = year
-                    }
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Text(selectedYear != nil ? String(selectedYear!) : "All Time")
-                        .cvFont(CVFont.actionLabel)
-                        .foregroundStyle(Color.white)
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.white)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.brandAccent)
-                .clipShape(Capsule())
-            }
-        }
-        .padding(.vertical, 4)
-    }
     
     private func reservoirTile(for reservoir: Reservoir) -> some View {
         let trips = filteredTrips(for: reservoir)
