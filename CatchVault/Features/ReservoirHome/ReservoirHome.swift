@@ -16,6 +16,7 @@ public struct ReservoirHome: View {
     private var allTrips: [Trip]
     
     @State private var selectedYear: Int? = nil
+    @State private var selectedReservoirForTrip: Reservoir? = nil
     @State private var showingAddReservoir: Bool = false
     
     private var availableYears: [Int] {
@@ -33,7 +34,10 @@ public struct ReservoirHome: View {
                 
                 ScrollView {
                     VStack(spacing: 16) {
-                        yearFilterHeader
+                        CVYearPicker(
+                            selectedYear: $selectedYear,
+                            availableYears: availableYears
+                        )
                         
                         if reservoirs.isEmpty {
                             emptyStateCard
@@ -54,7 +58,7 @@ public struct ReservoirHome: View {
                 ToolbarItem(placement: .principal) {
                     Text("Reservoirs")
                         .font(.headline)
-                        .foregroundStyle(Color.white) // Set your text color here
+                        .foregroundStyle(Color.white)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(destination: Text("Analytics Dashboard")) {
@@ -65,44 +69,20 @@ public struct ReservoirHome: View {
                     }
                 }
             }
+            .toolbarBackground(Color.backgroundMain, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .sheet(isPresented: $showingAddReservoir) {
                 Text("Add Reservoir View")
             }
-        }
-    }
-    
-    // MARK: - Subviews
-    
-    private var yearFilterHeader: some View {
-        HStack {
-            Menu {
-                Button("All Time") {
-                    selectedYear = nil
-                }
-                
-                ForEach(availableYears, id: \.self) { year in
-                    Button(String(year)) {
-                        selectedYear = year
-                    }
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Text(selectedYear != nil ? String(selectedYear!) : "All Time")
-                        .cvFont(CVFont.actionLabel)
-                        .foregroundStyle(Color.white)
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.white)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.brandAccent)
-                .clipShape(Capsule())
+            .sheet(item: $selectedReservoirForTrip) { reservoir in
+                StartTripView(reservoir: reservoir)
+            }
+            .navigationDestination(for: Reservoir.self) { reservoir in
+                ReservoirDetailsView(reservoir: reservoir)
             }
         }
-        .padding(.vertical, 4)
     }
+    
     
     private func reservoirTile(for reservoir: Reservoir) -> some View {
         let trips = filteredTrips(for: reservoir)
@@ -111,7 +91,7 @@ public struct ReservoirHome: View {
         
         return CVCardContainer {
             VStack(alignment: .leading, spacing: 14) {
-                NavigationLink(destination: Text("Reservoir Details: \(reservoir.name)")) {
+                NavigationLink(value: reservoir) {
                     HStack {
                         Text(reservoir.name)
                             .cvFont(CVFont.sectionHeader)
@@ -154,20 +134,22 @@ public struct ReservoirHome: View {
                     }
                 }
                 
-                NavigationLink(destination: Text("Start Trip at \(reservoir.name)")) {
+                Button(action: {
+                    selectedReservoirForTrip = reservoir
+                }) {
                     HStack {
-                        Spacer()
+                        Image(systemName: "play.fill")
                         Text("Start Trip")
-                            .cvFont(CVFont.actionLabel)
-                            .foregroundStyle(Color.white)
-                        Spacer()
                     }
+                    .cvFont(CVFont.actionLabel)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 44)
                     .background(Color.brandAccent)
+                    .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
+                .buttonStyle(.plain)
             }
-            .padding(12)
         }
     }
     

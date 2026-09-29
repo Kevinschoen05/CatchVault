@@ -50,8 +50,8 @@ struct CatchVaultApp: App {
         let manager = MigrationManager(context: backgroundContext)
         
         // Locate the cleaned production snapshot embedded inside the application package bundle
-        guard let fileURL = Bundle.main.url(forResource: "cleaned_production_snapshot", withExtension: "json") else {
-            print("[CRITICAL DIAGNOSTIC ERROR] 'cleaned_production_snapshot.json' missing from main application bundle.")
+        guard let fileURL = Bundle.main.url(forResource: "test_data", withExtension: "json") else {
+            print("[CRITICAL DIAGNOSTIC ERROR] 'test_data' missing from main application bundle.")
             return
         }
         
