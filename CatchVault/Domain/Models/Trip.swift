@@ -44,7 +44,8 @@ final class Trip {
         temperature: Double? = nil,
         windSpeed: Double? = nil,
         precipitation: Double? = nil,
-        reservoir: Reservoir? = nil
+        reservoir: Reservoir? = nil,
+        anglers: [Angler] = []
     ) {
         self.id = id
         self.startTime = startTime

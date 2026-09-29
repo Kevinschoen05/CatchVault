@@ -6,3 +6,8 @@
 **/.DS_Store
 
 UserInterfaceState.xcuserstate
+
+# Repomix / AI Context Output
+repomix-output.xml
+repomix-output.txt
+repomix-output.md

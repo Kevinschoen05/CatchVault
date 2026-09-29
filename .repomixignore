@@ -1,0 +1,13 @@
+Code snippet
+# Raw Data Snapshots & Json dumps
+*.json
+Features/Migration/*.json
+Gemini/Samples/
+
+# Asset Catalogs / Xcode Workspace Metadata
+*.xcassets/
+*.xcodeproj/
+*.xcworkspace/
+
+# Build artifacts & Python environment files
+normalize_legacy.py

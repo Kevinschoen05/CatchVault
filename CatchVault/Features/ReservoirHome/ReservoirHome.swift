@@ -16,6 +16,7 @@ public struct ReservoirHome: View {
     private var allTrips: [Trip]
     
     @State private var selectedYear: Int? = nil
+    @State private var selectedReservoirForTrip: Reservoir? = nil
     @State private var showingAddReservoir: Bool = false
     
     private var availableYears: [Int] {
@@ -72,6 +73,9 @@ public struct ReservoirHome: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .sheet(isPresented: $showingAddReservoir) {
                 Text("Add Reservoir View")
+            }
+            .sheet(item: $selectedReservoirForTrip) { reservoir in
+                StartTripView(reservoir: reservoir)
             }
             .navigationDestination(for: Reservoir.self) { reservoir in
                 ReservoirDetailsView(reservoir: reservoir)
@@ -130,20 +134,22 @@ public struct ReservoirHome: View {
                     }
                 }
                 
-                NavigationLink(destination: Text("Start Trip at \(reservoir.name)")) {
+                Button(action: {
+                    selectedReservoirForTrip = reservoir
+                }) {
                     HStack {
-                        Spacer()
+                        Image(systemName: "play.fill")
                         Text("Start Trip")
-                            .cvFont(CVFont.actionLabel)
-                            .foregroundStyle(Color.white)
-                        Spacer()
                     }
+                    .cvFont(CVFont.actionLabel)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 44)
                     .background(Color.brandAccent)
+                    .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
+                .buttonStyle(.plain)
             }
-            .padding(12)
         }
     }
     

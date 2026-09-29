@@ -66,7 +66,7 @@ struct ReservoirDetailsView: View {
         .toolbarBackground(Color.backgroundMain, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $showingStartTripSheet) {
-            Text("Start Trip Sheet (Placeholder)")
+            StartTripView(reservoir: reservoir)
         }
         .sheet(item: $selectedTripForDetails) { _ in
             Text("Trip Details (Placeholder)")
