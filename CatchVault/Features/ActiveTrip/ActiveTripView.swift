@@ -61,8 +61,7 @@ struct ActiveTripView: View {
             }
             // MARK: - Modal Workflows
             .sheet(isPresented: $showingRecordFishSheet) {
-                // Placeholder for RecordFishView
-                Text("Record Fish View (Placeholder)")
+                RecordFishView(trip: viewModel.trip)
                     .presentationDetents([.large])
             }
             .sheet(isPresented: $showingEndTripSheet) {
