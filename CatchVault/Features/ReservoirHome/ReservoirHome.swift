@@ -18,6 +18,7 @@ public struct ReservoirHome: View {
     @State private var selectedYear: Int? = nil
     @State private var selectedReservoirForTrip: Reservoir? = nil
     @State private var showingAddReservoir: Bool = false
+    @State private var activeTrip: Trip? = nil
     
     private var availableYears: [Int] {
         let years = allTrips.map { Calendar.current.component(.year, from: $0.startTime) }
@@ -75,7 +76,14 @@ public struct ReservoirHome: View {
                 Text("Add Reservoir View")
             }
             .sheet(item: $selectedReservoirForTrip) { reservoir in
-                StartTripView(reservoir: reservoir)
+                StartTripView(reservoir: reservoir,
+                              onTripStarted: { createdTrip in
+                                  selectedReservoirForTrip = nil
+                                  activeTrip = createdTrip
+                              })
+            }
+            .fullScreenCover(item: $activeTrip) { trip in
+                            ActiveTripView(trip: trip)
             }
             .navigationDestination(for: Reservoir.self) { reservoir in
                 ReservoirDetailsView(reservoir: reservoir)
