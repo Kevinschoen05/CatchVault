@@ -246,15 +246,20 @@ struct StartTripView: View {
     private func executeStartTrip() {
         guard let reservoir = selectedReservoir, !selectedAnglers.isEmpty else { return }
         
+        // 1. Initialize core primitive attributes
         let newTrip = Trip(
             startTime: startTime,
-            reservoir: reservoir,
-            anglers: Array(selectedAnglers)
+            reservoir: reservoir
         )
         
+        // 2. Insert entity into SwiftData context FIRST
         modelContext.insert(newTrip)
         
+        // 3. Attach relationship array to inserted model instance
+        newTrip.anglers = Array(selectedAnglers)
+        
         do {
+            // 4. Commit model graph transaction
             try modelContext.save()
             onTripStarted?(newTrip)
             dismiss()
