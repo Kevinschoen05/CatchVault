@@ -157,7 +157,7 @@ struct AnalyticsDashboardView: View {
                 title: "Angler Totals",
                 subtitle: "Total catches, averages, and species breakdown per angler.",
                 icon: "person.3.fill",
-                destination: Text("Angler Totals View (Placeholder)")
+                destination: AnglerTotalsView()
             )
             
             analyticsTile(
