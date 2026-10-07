@@ -2,13 +2,6 @@
 //  AnalyticsDashboardView.swift
 //  CatchVault
 //
-//  Created by Kevin Schoen on 10/6/26.
-//
-
-//
-//  AnalyticsDashboardView.swift
-//  CatchVault
-//
 
 import SwiftUI
 import SwiftData
@@ -16,16 +9,47 @@ import SwiftData
 struct AnalyticsDashboardView: View {
     @Environment(\.modelContext) private var modelContext
     
-    // SwiftData Query for year filter extraction
-    @Query private var allTrips: [Trip]
+    // SwiftData Query fetching all trips and fish catches directly
+    @Query(sort: \Trip.startTime, order: .reverse) private var allTrips: [Trip]
+    @Query private var allCatches: [FishCatch]
     
     @State private var selectedYear: Int? = nil
+    
+    // MARK: - Computed Filtered Collections
     
     /// Dynamically extracts available years from recorded trips
     private var availableYears: [Int] {
         let years = allTrips.map { Calendar.current.component(.year, from: $0.startTime) }
         return Array(Set(years)).sorted(by: >)
     }
+    
+    /// Trips filtered by selected year (or all trips if selectedYear is nil)
+    private var filteredTrips: [Trip] {
+        guard let year = selectedYear else { return allTrips }
+        return allTrips.filter { Calendar.current.component(.year, from: $0.startTime) == year }
+    }
+    
+    /// Catches filtered by selected year (or all catches if selectedYear is nil)
+    private var filteredCatches: [FishCatch] {
+        guard let year = selectedYear else { return allCatches }
+        return allCatches.filter { Calendar.current.component(.year, from: $0.timestamp) == year }
+    }
+    
+    // MARK: - Calculated Telemetry Metrics
+    
+    private var totalFishCount: Int {
+        filteredCatches.count
+    }
+    
+    private var totalTripsCount: Int {
+        filteredTrips.count
+    }
+    
+    private var totalMassLbs: Double {
+        filteredCatches.reduce(0.0) { $0 + $1.weight }
+    }
+    
+    // MARK: - Body
     
     var body: some View {
         ZStack {
@@ -41,7 +65,7 @@ struct AnalyticsDashboardView: View {
                         availableYears: availableYears
                     )
                     
-                    // 2. High-Level Telemetry Cards (Baseline Layout Placeholder)
+                    // 2. High-Level Telemetry Cards (Real-Time Live Aggregations)
                     highLevelMetricsSection
                     
                     // 3. Navigation Grid to Analytical Breakdown Views
@@ -59,25 +83,30 @@ struct AnalyticsDashboardView: View {
     
     // MARK: - Subviews
     
-    /// High-level summary metrics placeholder cards
+    /// High-level summary metrics card displaying live aggregations
     private var highLevelMetricsSection: some View {
         CVCardContainer {
             VStack(alignment: .leading, spacing: 12) {
-                Text("All-Time Performance Summary")
+                // Header text formatting fixed to explicitly format years without commas
+                Text(selectedYear == nil ? "All-Time Performance Summary" : "\(String(format: "%d", selectedYear!)) Performance Summary")
                     .cvFont(CVFont.sectionHeader)
                     .foregroundStyle(Color.primary)
                 
                 Divider()
                     .background(Color.secondary.opacity(0.2))
                 
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
+                    // Total Fish Stat
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Fish")
                             .cvFont(CVFont.metadata)
                             .foregroundStyle(Color.secondary)
-                        Text("—")
+                        
+                        Text("\(totalFishCount)")
                             .cvFont(CVFont.telemetryMedium)
                             .foregroundStyle(Color.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
@@ -85,13 +114,17 @@ struct AnalyticsDashboardView: View {
                         .frame(height: 32)
                         .background(Color.secondary.opacity(0.2))
                     
+                    // Total Trips Stat
                     VStack(alignment: .center, spacing: 4) {
                         Text("Total Trips")
                             .cvFont(CVFont.metadata)
                             .foregroundStyle(Color.secondary)
-                        Text("—")
+                        
+                        Text("\(totalTripsCount)")
                             .cvFont(CVFont.telemetryMedium)
                             .foregroundStyle(Color.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                     
@@ -99,13 +132,17 @@ struct AnalyticsDashboardView: View {
                         .frame(height: 32)
                         .background(Color.secondary.opacity(0.2))
                     
+                    // Total Mass Stat (Line limit and minimum scale factor prevent multi-line wrapping)
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Total Mass")
                             .cvFont(CVFont.metadata)
                             .foregroundStyle(Color.secondary)
-                        Text("— lbs")
+                        
+                        Text(String(format: "%.2f lbs", totalMassLbs))
                             .cvFont(CVFont.telemetryMedium)
                             .foregroundStyle(Color.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
