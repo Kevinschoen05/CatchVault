@@ -65,9 +65,14 @@ struct ActiveTripView: View {
                     .presentationDetents([.large])
             }
             .sheet(isPresented: $showingEndTripSheet) {
-                // Placeholder for EndTripView
-                Text("End Trip View (Placeholder)")
-                    .presentationDetents([.medium])
+                EndTripView(
+                    trip: viewModel.trip,
+                    onTripCompleted: {
+                        // Dismiss parent ActiveTripView workspace cleanly back to ReservoirHome
+                        dismiss()
+                    }
+                )
+                .presentationDetents([.large])
             }
         }
     }
