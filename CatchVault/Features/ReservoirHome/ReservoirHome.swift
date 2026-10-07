@@ -62,7 +62,7 @@ public struct ReservoirHome: View {
                         .foregroundStyle(Color.white)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(destination: Text("Analytics Dashboard")) {
+                    NavigationLink(destination: AnalyticsDashboardView()) {
                         Image(systemName: "chart.bar.xaxis")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color.brandAccent)
