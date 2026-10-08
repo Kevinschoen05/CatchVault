@@ -5,6 +5,7 @@
 
 import SwiftUI
 import SwiftData
+import MapKit
 
 public struct TripDetailsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -20,11 +21,11 @@ public struct TripDetailsView: View {
     
     // MARK: - Formatter Configuration
     
-    /// User-friendly duration formatter (e.g., "10h 15m 30s" or "10 hours, 15 minutes")
+    /// User-friendly duration formatter (e.g., "10h 15m 30s")
     private static let readableDurationFormatter: DateComponentsFormatter = {
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.unitsStyle = .abbreviated // Options: .abbreviated ("10h 15m 30s"), .full ("10 hours, 15 minutes"), .brief
+        formatter.unitsStyle = .abbreviated
         formatter.zeroFormattingBehavior = .dropLeading
         return formatter
     }()
@@ -73,10 +74,10 @@ public struct TripDetailsView: View {
                     // 1. Session Overview & Telemetry Header Card
                     sessionOverviewCard
                     
-                    // 2. Spatial CatchMap Container (Baseline Placeholder)
-                    catchMapPlaceholderCard
+                    // 2. Spatial CatchMap Container (Live Interactive Map)
+                    tripCatchMapCard
                     
-                    // 3. Weather Snapshot Container (Baseline Proxy Target)
+                    // 3. Weather Snapshot Container
                     weatherSnapshotCard
                     
                     // 4. Chronological Catch Log Feed
@@ -172,25 +173,13 @@ public struct TripDetailsView: View {
         }
     }
     
-    /// Reserved CatchMap Placeholder Card (180pt height)
-    private var catchMapPlaceholderCard: some View {
+    /// Live Spatial Catch Map Card replacing static placeholder
+    private var tripCatchMapCard: some View {
         CVCardContainer {
-            VStack(spacing: 8) {
-                Image(systemName: "map.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.brandAccent)
-                
-                Text("Session Catch Map")
-                    .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
-                
-                Text("GPS coordinates captured for catches logged on this trip will map spatial pins here.")
-                    .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 180)
+            TripCatchMapView(catches: trip.catches)
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
     
@@ -241,7 +230,7 @@ public struct TripDetailsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Catch Log")
                 .cvFont(CVFont.sectionHeader)
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.primary)
                 .padding(.leading, 4)
             
             if sortedCatches.isEmpty {
@@ -324,6 +313,103 @@ public struct TripDetailsView: View {
                     .cvFont(CVFont.primaryBody)
                     .foregroundStyle(Color.primary)
             }
+        }
+    }
+}
+
+// MARK: - Spatial Map Subview
+
+private struct TripCatchMapView: View {
+    let catches: [FishCatch]
+    
+    /// Filtered list of catches containing valid GPS coordinates
+    private var mappedCatches: [FishCatch] {
+        catches.filter { $0.latitude != nil && $0.longitude != nil }
+    }
+    
+    @State private var cameraPosition: MapCameraPosition = .automatic
+    
+    var body: some View {
+        Group {
+            if mappedCatches.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "map.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(Color.brandAccent)
+                    
+                    Text("Session Catch Map")
+                        .cvFont(CVFont.sectionHeader)
+                        .foregroundStyle(Color.primary)
+                    
+                    Text("No GPS coordinates recorded for catches on this trip.")
+                        .cvFont(CVFont.metadata)
+                        .foregroundStyle(Color.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Map(position: $cameraPosition) {
+                    ForEach(mappedCatches) { catchItem in
+                        if let lat = catchItem.latitude, let lon = catchItem.longitude {
+                            let speciesName = catchItem.species?.name ?? "Fish"
+                            let monogram = String(speciesName.prefix(1)).uppercased()
+                            
+                            Marker(
+                                speciesName,
+                                monogram: Text(monogram),
+                                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)
+                            )
+                            .tint(SpeciesColorProvider.color(for: catchItem.species?.name))
+                        }
+                    }
+                }
+                .mapStyle(.standard)
+                .onAppear {
+                    configureCameraPosition()
+                }
+            }
+        }
+    }
+    
+    /// Evaluates bounding box across all catches to center map camera cleanly
+    private func configureCameraPosition() {
+        let coords = mappedCatches.compactMap { catchItem -> CLLocationCoordinate2D? in
+            guard let lat = catchItem.latitude, let lon = catchItem.longitude else { return nil }
+            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        }
+        
+        guard !coords.isEmpty else { return }
+        
+        if coords.count == 1 {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: coords[0],
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )
+            )
+        } else {
+            let latitudes = coords.map { $0.latitude }
+            let longitudes = coords.map { $0.longitude }
+            
+            let minLat = latitudes.min()!
+            let maxLat = latitudes.max()!
+            let minLon = longitudes.min()!
+            let maxLon = longitudes.max()!
+            
+            let center = CLLocationCoordinate2D(
+                latitude: (minLat + maxLat) / 2.0,
+                longitude: (minLon + maxLon) / 2.0
+            )
+            
+            let latDelta = max((maxLat - minLat) * 1.4, 0.008)
+            let lonDelta = max((maxLon - minLon) * 1.4, 0.008)
+            
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: center,
+                    span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lonDelta)
+                )
+            )
         }
     }
 }
