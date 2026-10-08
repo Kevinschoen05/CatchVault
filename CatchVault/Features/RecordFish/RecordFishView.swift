@@ -46,6 +46,10 @@ struct RecordFishView: View {
             }
             .navigationTitle("Record Catch")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                print("🚀 [RECORD FISH VIEW] Task modifier triggered on view appearance!")
+                await viewModel.captureLocation()
+            }
             .toolbarBackground(Color.backgroundMain, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
@@ -68,7 +72,7 @@ struct RecordFishView: View {
                 }
             }
             .task {
-                viewModel.captureLocation()
+                await viewModel.captureLocation()
             }
             .alert("Error", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
