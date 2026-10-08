@@ -5,6 +5,7 @@
 
 import SwiftUI
 import SwiftData
+import MapKit
 
 public struct ReservoirDetailsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -76,8 +77,8 @@ public struct ReservoirDetailsView: View {
                     // 2. Aggregate Telemetry Card
                     telemetryCard
                     
-                    // 3. CatchMap Placeholder Container
-                    catchMapPlaceholderCard
+                    // 3. CatchMap Container (Live Interactive Reservoir Map)
+                    reservoirCatchMapCard
                     
                     // 4. Primary Modal Action Trigger
                     startTripButton
@@ -113,7 +114,7 @@ public struct ReservoirDetailsView: View {
         
         // Programmatic Value-Based Navigation Target for historical trip details
         .navigationDestination(for: Trip.self) { trip in
-           TripDetailsView(trip: trip)
+            TripDetailsView(trip: trip)
         }
     }
     
@@ -123,7 +124,7 @@ public struct ReservoirDetailsView: View {
     private var telemetryCard: some View {
         CVCardContainer {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Reservoir Totals")
+                Text("Water Body Telemetry")
                     .cvFont(CVFont.sectionHeader)
                     .foregroundStyle(Color.primary)
                 
@@ -181,25 +182,13 @@ public struct ReservoirDetailsView: View {
         }
     }
     
-    /// CatchMap Placeholder Card (Reserved 180pt height for MapKit integration)
-    private var catchMapPlaceholderCard: some View {
+    /// Live Spatial Catch Map Card replacing static placeholder
+    private var reservoirCatchMapCard: some View {
         CVCardContainer {
-            VStack(spacing: 8) {
-                Image(systemName: "map.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.brandAccent)
-                
-                Text("Catch Map Placeholder")
-                    .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
-                
-                Text("Spatial coordinates from catches logged on this reservoir will render here.")
-                    .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 180)
+            ReservoirCatchMapView(trips: filteredTrips)
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
     
@@ -229,7 +218,7 @@ public struct ReservoirDetailsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Trip History")
                 .cvFont(CVFont.sectionHeader)
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.primary)
                 .padding(.leading, 4)
             
             if filteredTrips.isEmpty {
@@ -247,7 +236,12 @@ public struct ReservoirDetailsView: View {
         let catchesCount = trip.catches.count
         let totalMass = trip.catches.reduce(0.0) { $0 + $1.weight }
         let formattedDate = trip.startTime.formatted(date: .abbreviated, time: .shortened)
-        let anglerNames = trip.anglers.map { $0.name }.joined(separator: ", ")
+        
+        // Derive unique anglers across both trip.anglers and individual catches
+        let directAnglerNames = trip.anglers.map { $0.name }
+        let catchAnglerNames = trip.catches.compactMap { $0.angler?.name }
+        let allUniqueAnglers = Array(Set(directAnglerNames + catchAnglerNames)).sorted()
+        let anglerNames = allUniqueAnglers.joined(separator: ", ")
         
         return CVCardContainer {
             VStack(alignment: .leading, spacing: 12) {
@@ -328,6 +322,107 @@ public struct ReservoirDetailsView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
+        }
+    }
+}
+
+// MARK: - Spatial Reservoir Map Subview
+
+private struct ReservoirCatchMapView: View {
+    let trips: [Trip]
+    
+    /// Aggregates catches across all filtered trips that contain valid GPS coordinates
+    private var mappedCatches: [FishCatch] {
+        trips.flatMap { $0.catches }
+            .filter { $0.latitude != nil && $0.longitude != nil }
+    }
+    
+    @State private var cameraPosition: MapCameraPosition = .automatic
+    
+    var body: some View {
+        Group {
+            if mappedCatches.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "map.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(Color.brandAccent)
+                    
+                    Text("Reservoir Catch Map")
+                        .cvFont(CVFont.sectionHeader)
+                        .foregroundStyle(Color.primary)
+                    
+                    Text("No GPS coordinates recorded for catches in this temporal view.")
+                        .cvFont(CVFont.metadata)
+                        .foregroundStyle(Color.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Map(position: $cameraPosition) {
+                    ForEach(mappedCatches) { catchItem in
+                        if let lat = catchItem.latitude, let lon = catchItem.longitude {
+                            let speciesName = catchItem.species?.name ?? "Fish"
+                            let monogram = String(speciesName.prefix(1)).uppercased()
+                            
+                            Marker(
+                                speciesName,
+                                monogram: Text(monogram),
+                                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)
+                            )
+                            .tint(SpeciesColorProvider.color(for: catchItem.species?.name))
+                        }
+                    }
+                }
+                .mapStyle(.standard)
+                .onAppear {
+                    configureCameraPosition()
+                }
+                .onChange(of: trips) { _, _ in
+                    configureCameraPosition()
+                }
+            }
+        }
+    }
+    
+    /// Computes bounding region across all aggregated catch locations to frame camera
+    private func configureCameraPosition() {
+        let coords = mappedCatches.compactMap { catchItem -> CLLocationCoordinate2D? in
+            guard let lat = catchItem.latitude, let lon = catchItem.longitude else { return nil }
+            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        }
+        
+        guard !coords.isEmpty else { return }
+        
+        if coords.count == 1 {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: coords[0],
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )
+            )
+        } else {
+            let latitudes = coords.map { $0.latitude }
+            let longitudes = coords.map { $0.longitude }
+            
+            let minLat = latitudes.min()!
+            let maxLat = latitudes.max()!
+            let minLon = longitudes.min()!
+            let maxLon = longitudes.max()!
+            
+            let center = CLLocationCoordinate2D(
+                latitude: (minLat + maxLat) / 2.0,
+                longitude: (minLon + maxLon) / 2.0
+            )
+            
+            let latDelta = max((maxLat - minLat) * 1.4, 0.008)
+            let lonDelta = max((maxLon - minLon) * 1.4, 0.008)
+            
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: center,
+                    span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lonDelta)
+                )
+            )
         }
     }
 }
