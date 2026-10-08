@@ -164,21 +164,21 @@ struct AnalyticsDashboardView: View {
                 title: "Reservoir Leaderboard",
                 subtitle: "Top-10 heaviest fish recorded per body of water.",
                 icon: "trophy.fill",
-                destination: Text("Reservoir Leaderboard View (Placeholder)")
+                destination: ReservoirLeaderboardView()
             )
             
             analyticsTile(
                 title: "Species Breakdown",
                 subtitle: "Distribution profiles and landed volumes across reservoirs.",
                 icon: "fish.fill",
-                destination: Text("Species Breakdown View (Placeholder)")
+                destination: SpeciesBreakdownView()
             )
             
             analyticsTile(
                 title: "Catch Trends",
                 subtitle: "Monthly temporal catches and seasonal performance trends.",
                 icon: "chart.line.uptrend.xyaxis",
-                destination: Text("Catch Trends View (Placeholder)")
+                destination: CatchTrendsView()
             )
         }
     }
