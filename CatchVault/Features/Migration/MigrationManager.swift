@@ -1,3 +1,8 @@
+//
+//  MigrationManager.swift
+//  CatchVault
+//
+
 import Foundation
 import SwiftData
 
@@ -76,8 +81,42 @@ public final class MigrationManager {
             context.insert(newCatch)
         }
         
+        // 7. Execute Post-Ingestion Relationship Hygiene, Roster Backfill & Session Boundary Pass
+        finalizeTripRelationshipsAndPurgeEmpty()
+        
         // Save at transaction completion point to avoid partial state corruption
         try context.save()
+    }
+    
+    // MARK: - Relationship Hygiene & Boundary Finalization
+    
+    /// Guarantees that every trip's angler roster is complete, assigns explicit end times for legacy records,
+    /// and purges orphaned/empty synthetic trips.
+    private func finalizeTripRelationshipsAndPurgeEmpty() {
+        for (key, trip) in tripMap {
+            // A. Purge orphaned legacy trips that contain no catches and no anglers
+            if trip.catches.isEmpty && trip.anglers.isEmpty {
+                context.delete(trip)
+                tripMap.removeValue(forKey: key)
+                continue
+            }
+            
+            // B. Backfill trip.anglers from all unique anglers linked to child catches
+            let catchAnglers = trip.catches.compactMap { $0.angler }
+            for catchAngler in catchAnglers {
+                if !trip.anglers.contains(where: { $0.id == catchAngler.id }) {
+                    trip.anglers.append(catchAngler)
+                }
+            }
+            
+            // C. Stamp explicit legacy session end time using the timestamp of the latest catch logged
+            if let latestCatchDate = trip.catches.map({ $0.timestamp }).max() {
+                trip.endTime = latestCatchDate
+            } else {
+                // Fallback for empty/edge-case legacy trips: assign endTime = startTime to close the session
+                trip.endTime = trip.startTime
+            }
+        }
     }
     
     // MARK: - Dimension Resolvers
@@ -126,13 +165,17 @@ public final class MigrationManager {
             if !existingTrip.anglers.contains(where: { $0.id == angler.id }) {
                 existingTrip.anglers.append(angler)
             }
+            
+            // Adjust trip.startTime if an earlier catch timestamp exists for this daily trip
+            if timestamp < existingTrip.startTime {
+                existingTrip.startTime = timestamp
+            }
+            
             return existingTrip
         }
         
-        // Create a parent trip bound to the start of that day's absolute UTC boundary
-        let tripStart = tokenFormatter.date(from: dateToken) ?? timestamp
-        
-        let newTrip = Trip(id: UUID(), startTime: tripStart, migrated: true, dataVersion: 1)
+        // Create a parent trip initialized with the timestamp of the first catch processed
+        let newTrip = Trip(id: UUID(), startTime: timestamp, migrated: true, dataVersion: 1)
         newTrip.reservoir = reservoir
         newTrip.anglers.append(angler)
         
