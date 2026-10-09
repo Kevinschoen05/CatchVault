@@ -15,6 +15,9 @@ final class Reservoir {
     @Attribute(.unique)
     var name: String
     
+    var latitude: Double?
+    var longitude: Double?
+    
     @Relationship(deleteRule: .nullify, inverse: \Trip.reservoir)
     var trips: [Trip] = []
     

@@ -6,10 +6,12 @@
 import Foundation
 import CoreLocation
 
+/// Protocol abstraction enabling dependency injection and testability for hardware location requests.
 public protocol LocationServiceProtocol {
     func requestCurrentLocation() async throws -> CLLocation
 }
 
+/// Concrete implementation managing native CLLocationManager hardware interactions.
 public final class LocationService: NSObject, LocationServiceProtocol, CLLocationManagerDelegate {
     public static let shared = LocationService()
     
@@ -17,6 +19,8 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
     private var continuation: CheckedContinuation<CLLocation, Error>?
     private var timeoutTask: Task<Void, Never>?
     private var bestLocationSoFar: CLLocation?
+    private var isAwaitingAuthorization: Bool = false
+    private var activeTask: Task<CLLocation, Error>?
     
     public enum LocationError: LocalizedError {
         case servicesDisabled
@@ -44,24 +48,38 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
     
+    /// Requests instantaneous GPS coordinates with accuracy filtering and a 15-second timeout safeguard.
     public func requestCurrentLocation() async throws -> CLLocation {
+        // Prevent Re-entrancy: If a location request is already in-flight, return the active task
+        if let existingTask = activeTask {
+            print("ℹ️ [GPS DEBUG] Location request already in flight. Joining existing task...")
+            return try await existingTask.value
+        }
+        
+        let task = Task<CLLocation, Error> {
+            try await self.performLocationRequest()
+        }
+        
+        self.activeTask = task
+        
+        defer {
+            self.activeTask = nil
+        }
+        
+        return try await task.value
+    }
+    
+    private func performLocationRequest() async throws -> CLLocation {
         print("📍 [GPS DEBUG] Location request initiated...")
         
         guard CLLocationManager.locationServicesEnabled() else {
-            print("❌ [GPS DEBUG] Location services disabled.")
+            print("❌ [GPS DEBUG] Location services are disabled on device.")
             throw LocationError.servicesDisabled
-        }
-        
-        // Prevent Continuation Leak: Cleanly resolve any prior pending request
-        if let existingContinuation = self.continuation {
-            print("⚠️ [GPS DEBUG] Resolving prior pending continuation.")
-            self.continuation = nil
-            existingContinuation.resume(throwing: LocationError.timeout)
         }
         
         bestLocationSoFar = nil
         let status = locationManager.authorizationStatus
-        print("📍 [GPS DEBUG] Authorization status: \(status.rawValue)")
+        print("📍 [GPS DEBUG] Current authorization status: \(status.rawValue)")
         
         if status == .denied || status == .restricted {
             print("❌ [GPS DEBUG] Permission denied or restricted.")
@@ -73,6 +91,7 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
             
             if status == .notDetermined {
                 print("📍 [GPS DEBUG] Prompting user for Location Authorization...")
+                self.isAwaitingAuthorization = true
                 self.locationManager.requestWhenInUseAuthorization()
             } else {
                 self.startHardwareUpdates()
@@ -84,7 +103,7 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
                 if !Task.isCancelled {
                     print("⚠️ [GPS DEBUG] 15-second timeout fired.")
                     if let fallback = self.bestLocationSoFar {
-                        print("✅ [GPS DEBUG] Returning fallback location: \(fallback.coordinate)")
+                        print("✅ [GPS DEBUG] Returning best location acquired before timeout: \(fallback.coordinate)")
                         self.finish(with: .success(fallback))
                     } else {
                         print("❌ [GPS DEBUG] No location acquired within window.")
@@ -106,16 +125,19 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
         let status = manager.authorizationStatus
         print("📍 [GPS DEBUG] Authorization status changed to: \(status.rawValue)")
         
-        guard continuation != nil else { return }
+        guard continuation != nil || isAwaitingAuthorization else { return }
         
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
+            isAwaitingAuthorization = false
             startHardwareUpdates()
         case .denied, .restricted:
+            isAwaitingAuthorization = false
             finish(with: .failure(LocationError.permissionDenied))
         case .notDetermined:
             break
         @unknown default:
+            isAwaitingAuthorization = false
             finish(with: .failure(LocationError.unknown))
         }
     }
@@ -142,16 +164,18 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
         let isRecent = age < 10.0
         
         #if targetEnvironment(simulator)
+        // Relax accuracy threshold in Simulator because mock locationd often reports ±50m or uncalibrated values
         let isAccurate = accuracy >= 0 && accuracy <= 100.0
         #else
+        // Strict off-grid satellite accuracy requirement for physical hardware
         let isAccurate = accuracy >= 0 && accuracy <= 20.0
         #endif
         
         if isRecent && isAccurate {
-            print("✅ [GPS DEBUG] High-accuracy fix locked!")
+            print("✅ [GPS DEBUG] Valid high-accuracy fix acquired!")
             finish(with: .success(location))
         } else {
-            print("⚠️ [GPS DEBUG] Fix pending accuracy/recency filters.")
+            print("⚠️ [GPS DEBUG] Fix rejected | isRecent: \(isRecent), isAccurate: \(isAccurate)")
         }
     }
     
@@ -169,12 +193,13 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
         finish(with: .failure(error))
     }
     
-    // MARK: - Helper Termination
+    // MARK: - Safe Continuation Termination
     
     private func finish(with result: Result<CLLocation, Error>) {
         locationManager.stopUpdatingLocation()
         timeoutTask?.cancel()
         timeoutTask = nil
+        isAwaitingAuthorization = false
         
         if let continuation = self.continuation {
             self.continuation = nil
@@ -186,4 +211,4 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
             }
         }
     }
-} 
+}
