@@ -186,4 +186,4 @@ public final class LocationService: NSObject, LocationServiceProtocol, CLLocatio
             }
         }
     }
-}
+} 
