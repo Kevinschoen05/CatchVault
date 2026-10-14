@@ -1,9 +1,3 @@
-//
-//  EndTripView.swift
-//  CatchVault
-//
-//  Created by Kevin Schoen on 10/6/26.
-//
 import SwiftUI
 import SwiftData
 
@@ -56,6 +50,7 @@ struct EndTripView: View {
                         dismiss()
                     }
                     .foregroundStyle(Color.secondary)
+                    .disabled(viewModel.isSaving)
                 }
             }
             .alert("Error", isPresented: Binding(
@@ -190,16 +185,25 @@ struct EndTripView: View {
         VStack(spacing: 12) {
             // "Complete & Save Trip" Primary CTA (Beacon Amber)
             Button {
-                if viewModel.saveAndEndTrip(context: modelContext) {
-                    onTripCompleted?()
-                    dismiss()
+                Task {
+                    if await viewModel.saveAndEndTrip(context: modelContext) {
+                        onTripCompleted?()
+                        dismiss()
+                    }
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                    Text("Complete & Save Trip")
-                        .cvFont(CVFont.actionLabel)
+                    if viewModel.isFetchingWeather {
+                        ProgressView()
+                            .tint(.white)
+                        Text("Fetching Weather & Saving...")
+                            .cvFont(CVFont.actionLabel)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                        Text("Complete & Save Trip")
+                            .cvFont(CVFont.actionLabel)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
@@ -223,6 +227,7 @@ struct EndTripView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
+            .disabled(viewModel.isSaving)
         }
     }
 }

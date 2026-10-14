@@ -1,3 +1,8 @@
+//
+//  RecordFishViewModel.swift
+//  CatchVault
+//
+
 import Foundation
 import SwiftData
 import CoreLocation
@@ -22,6 +27,7 @@ final class RecordFishViewModel {
     var capturedLatitude: Double?
     var capturedLongitude: Double?
     var isFetchingLocation: Bool = false
+    var locationAccuracyDescription: String?
     
     // MARK: - Presentation & Persistence State
     var isSaving: Bool = false
@@ -29,11 +35,11 @@ final class RecordFishViewModel {
     
     // MARK: - Dependencies
     let trip: Trip
-    private let locationManager: CLLocationManager
+    private let locationService: LocationServiceProtocol
     
-    init(trip: Trip, locationManager: CLLocationManager = CLLocationManager()) {
+    init(trip: Trip, locationService: LocationServiceProtocol = LocationService.shared) {
         self.trip = trip
-        self.locationManager = locationManager
+        self.locationService = locationService
         
         // Default angler selection to the first angler on the trip roster if available
         self.selectedAngler = trip.anglers.first
@@ -43,27 +49,22 @@ final class RecordFishViewModel {
     
     /// Requests instantaneous GPS coordinates at the moment of landing.
     @MainActor
-    func captureLocation() {
-        guard CLLocationManager.locationServicesEnabled() else {
-            return
-        }
-        
+    func captureLocation() async {
         isFetchingLocation = true
+        locationAccuracyDescription = "Acquiring GPS fix..."
+        defer { isFetchingLocation = false }
         
-        // Request one-time authorization and location snapshot if authorized
-        let status = locationManager.authorizationStatus
-        if status == .notDetermined {
-            locationManager.requestWhenInUseAuthorization()
+        do {
+            let location = try await locationService.requestCurrentLocation()
+            self.capturedLatitude = location.coordinate.latitude
+            self.capturedLongitude = location.coordinate.longitude
+            self.locationAccuracyDescription = String(format: "GPS Captured (±%.0fm)", location.horizontalAccuracy)
+        } catch {
+            // Location acquisition is optional; gracefully fail and retain nil coordinates
+            self.capturedLatitude = nil
+            self.capturedLongitude = nil
+            self.locationAccuracyDescription = "Location unavailable"
         }
-        
-        if status == .authorizedWhenInUse || status == .authorizedAlways {
-            if let location = locationManager.location {
-                self.capturedLatitude = location.coordinate.latitude
-                self.capturedLongitude = location.coordinate.longitude
-            }
-        }
-        
-        isFetchingLocation = false
     }
     
     // MARK: - Inline Species Creation & Deduplication
@@ -132,7 +133,7 @@ final class RecordFishViewModel {
         
         let catchTimestamp = Date()
         
-        // 1. Instantiate new FishCatch entity using explicit parameters
+        // 1. Instantiate new FishCatch entity
         let newCatch = FishCatch(
             timestamp: catchTimestamp,
             weight: weightValue,
