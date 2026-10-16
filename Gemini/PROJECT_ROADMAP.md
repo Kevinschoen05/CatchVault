@@ -44,8 +44,11 @@
 - [ ] 6.2.3 Review contrast and legibility across Light and Dark system modes
 - [ ] 6.2.4 Verify App Icon, Launch Screen, and system display assets
 
-### 6.3 App Store Connect & TestFlight Provisioning
-- [ ] 6.3.1 Create App Store Connect Record (Bundle ID, SKU, Primary Metadata)
-- [ ] 6.3.2 Configure Signing & Capabilities with paid Apple Developer Team certificate
-- [ ] 6.3.3 Archive release binary (.ipa) in Xcode and upload to App Store Connect
-- [ ] 6.3.4 Set up Internal/External TestFlight Beta group and issue invite link to target user
+[ ] 6.3 Brand Assets & Display Setup
+  - [ ] 6.3.1 Generate 1024x1024 App Icon asset catalog (`AppIcon`)
+  - [ ] 6.3.2 Configure branded Launch Screen backdrop and logo presentation
+- [ ] 6.4 App Store Connect & TestFlight Provisioning
+  - [ ] 6.4.1 Configure Signing & Capabilities with paid Apple Developer Team certificate[cite: 8]
+  - [ ] 6.4.2 Set up Privacy Usage Descriptions in `Info.plist` (Location & Photo Access)[cite: 8]
+  - [ ] 6.4.3 Archive release binary (.ipa) in Xcode and upload to App Store Connect[cite: 8]
+  - [ ] 6.4.4 Set up TestFlight Beta group and invite initial legacy users[cite: 8]
