@@ -82,7 +82,7 @@ struct SpeciesBreakdownView: View {
                 HStack {
                     Text("Total Volume by Species")
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Spacer()
                     
@@ -92,7 +92,7 @@ struct SpeciesBreakdownView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 Chart(speciesData, id: \.species.id) { item in
                     BarMark(
@@ -104,13 +104,15 @@ struct SpeciesBreakdownView: View {
                 .chartXAxis {
                     AxisMarks(position: .bottom) { _ in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
-                            .foregroundStyle(Color.secondary.opacity(0.15))
+                            .foregroundStyle(Color.textOnCardSecondary.opacity(0.15))
                         AxisValueLabel()
+                            .foregroundStyle(Color.textOnCardSecondary) // Fixes X-axis contrast
                     }
                 }
                 .chartYAxis {
                     AxisMarks(position: .leading) { _ in
                         AxisValueLabel()
+                            .foregroundStyle(Color.textOnCardSecondary) // Fixes Y-axis contrast
                     }
                 }
                 .frame(height: max(140, CGFloat(speciesData.count * 36)))
@@ -127,7 +129,7 @@ struct SpeciesBreakdownView: View {
                 HStack {
                     Text(item.species.name)
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Spacer()
                     
@@ -137,7 +139,7 @@ struct SpeciesBreakdownView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Reservoir Distribution Matrix
                 VStack(spacing: 8) {
@@ -148,17 +150,17 @@ struct SpeciesBreakdownView: View {
                             HStack {
                                 Text(spatial.reservoir.name)
                                     .cvFont(CVFont.primaryBody)
-                                    .foregroundStyle(Color.primary)
+                                    .foregroundStyle(Color.textOnCardPrimary)
                                 
                                 Spacer()
                                 
                                 Text("\(spatial.count)")
                                     .cvFont(CVFont.telemetryMedium)
-                                    .foregroundStyle(Color.primary)
+                                    .foregroundStyle(Color.textOnCardPrimary)
                                 
                                 Text(String(format: "(%.0f%%)", percentage * 100))
                                     .cvFont(CVFont.metadata)
-                                    .foregroundStyle(Color.secondary)
+                                    .foregroundStyle(Color.textOnCardSecondary)
                                     .frame(width: 44, alignment: .trailing)
                             }
                             
@@ -166,7 +168,7 @@ struct SpeciesBreakdownView: View {
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
                                     RoundedRectangle(cornerRadius: 3)
-                                        .fill(Color.surfaceTertiary.opacity(0.5))
+                                        .fill(Color.surfaceSecondary.opacity(0.15))
                                         .frame(height: 6)
                                     
                                     RoundedRectangle(cornerRadius: 3)
@@ -189,15 +191,15 @@ struct SpeciesBreakdownView: View {
             VStack(spacing: 8) {
                 Image(systemName: "fish")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.secondary.opacity(0.6))
+                    .foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
                 
                 Text("No Catches Found")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("Log trips and catches to view species spatial distribution analytics.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -255,4 +257,3 @@ struct SpeciesBreakdownView: View {
         return result.sorted { $0.totalCount > $1.totalCount }
     }
 }
-

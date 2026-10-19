@@ -98,7 +98,7 @@ struct CatchTrendsView: View {
                 HStack {
                     Text("Target Species")
                         .cvFont(CVFont.primaryBody)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Spacer()
                     
@@ -113,13 +113,13 @@ struct CatchTrendsView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Reservoir Scope Selector Row
                 HStack {
                     Text("Reservoir Scope")
                         .cvFont(CVFont.primaryBody)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Spacer()
                     
@@ -148,11 +148,11 @@ struct CatchTrendsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(activeSpecies?.name ?? "Species Trends")
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text("\(totalCatches) total landed")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     
                     Spacer()
@@ -161,7 +161,7 @@ struct CatchTrendsView: View {
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("Peak Month")
                                 .cvFont(CVFont.metadata)
-                                .foregroundStyle(Color.secondary)
+                                .foregroundStyle(Color.textOnCardSecondary)
                             
                             Text("\(peak.monthName) (\(peak.catchCount))")
                                 .cvFont(CVFont.telemetryMedium)
@@ -171,7 +171,7 @@ struct CatchTrendsView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 Chart(monthlyData) { entry in
                     BarMark(
@@ -183,15 +183,17 @@ struct CatchTrendsView: View {
                 .chartXAxis {
                     AxisMarks(position: .bottom) { _ in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
-                            .foregroundStyle(Color.secondary.opacity(0.15))
+                            .foregroundStyle(Color.textOnCardSecondary.opacity(0.15))
                         AxisValueLabel()
+                            .foregroundStyle(Color.textOnCardSecondary) // Fixes X-axis month labels
                     }
                 }
                 .chartYAxis {
                     AxisMarks(position: .leading) { _ in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 1))
-                            .foregroundStyle(Color.secondary.opacity(0.15))
+                            .foregroundStyle(Color.textOnCardSecondary.opacity(0.15))
                         AxisValueLabel()
+                            .foregroundStyle(Color.textOnCardSecondary) // Fixes Y-axis catch count labels
                     }
                 }
                 .frame(height: 200)
@@ -208,17 +210,17 @@ struct CatchTrendsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Monthly Summary Ledger")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 VStack(spacing: 6) {
                     ForEach(activeMonths) { entry in
                         HStack {
                             Text(entry.monthFullName)
                                 .cvFont(CVFont.primaryBody)
-                                .foregroundStyle(Color.primary)
+                                .foregroundStyle(Color.textOnCardPrimary)
                             
                             Spacer()
                             
@@ -230,7 +232,7 @@ struct CatchTrendsView: View {
                         .padding(.horizontal, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.surfaceTertiary.opacity(0.3))
+                                .fill(Color.surfaceSecondary.opacity(0.12))
                         )
                     }
                 }
@@ -244,15 +246,15 @@ struct CatchTrendsView: View {
             VStack(spacing: 8) {
                 Image(systemName: "fish")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.secondary.opacity(0.6))
+                    .foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
                 
                 Text("No Species Recorded")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("Log species and catches to unlock seasonal temporal trend analytics.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -266,15 +268,15 @@ struct CatchTrendsView: View {
             VStack(spacing: 8) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.secondary.opacity(0.6))
+                    .foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
                 
                 Text("No Trends Data")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("No catch records found for \(activeSpecies?.name ?? "selected species") under active filter boundaries.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)

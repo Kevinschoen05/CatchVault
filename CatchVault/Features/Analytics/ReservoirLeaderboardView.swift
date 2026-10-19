@@ -72,7 +72,7 @@ struct ReservoirLeaderboardView: View {
                 HStack {
                     Text(reservoir.name)
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Spacer()
                     
@@ -82,30 +82,30 @@ struct ReservoirLeaderboardView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 if topCatches.isEmpty {
                     Text("No recorded catches for this selection.")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                         .padding(.vertical, 8)
                 } else {
                     // Tabular Column Header
                     HStack {
                         Text("#")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                             .frame(width: 28, alignment: .leading)
                         
                         Text("Angler / Species")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Spacer()
                         
                         Text("Weight / Year")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     .padding(.horizontal, 4)
                     
@@ -130,7 +130,7 @@ struct ReservoirLeaderboardView: View {
             // Rank Number (Frame expanded to 28pt & line limit locked to prevent wrapping)
             Text("\(rank)")
                 .cvFont(CVFont.telemetryMedium)
-                .foregroundStyle(rank <= 3 ? Color.brandAccent : Color.secondary)
+                .foregroundStyle(rank <= 3 ? Color.brandAccent : Color.textOnCardSecondary)
                 .lineLimit(1)
                 .frame(width: 28, alignment: .leading)
             
@@ -138,12 +138,12 @@ struct ReservoirLeaderboardView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(anglerName)
                     .cvFont(CVFont.primaryBody)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                     .lineLimit(1)
                 
                 Text(speciesName)
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .lineLimit(1)
             }
             
@@ -153,18 +153,18 @@ struct ReservoirLeaderboardView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(String(format: "%.2f lbs", catchItem.weight))
                     .cvFont(CVFont.telemetryMedium)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text(String(format: "%d", catchYear))
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
             }
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(rank % 2 == 0 ? Color.surfaceTertiary.opacity(0.3) : Color.clear)
+                .fill(rank % 2 == 0 ? Color.surfaceSecondary.opacity(0.12) : Color.clear)
         )
     }
     
@@ -174,15 +174,15 @@ struct ReservoirLeaderboardView: View {
             VStack(spacing: 8) {
                 Image(systemName: "map")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.secondary.opacity(0.6))
+                    .foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
                 
                 Text("No Reservoirs Found")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("Add reservoirs and record catches to view leaderboard rankings.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)

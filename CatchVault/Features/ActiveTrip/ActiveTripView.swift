@@ -87,11 +87,11 @@ struct ActiveTripView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(viewModel.trip.reservoir?.name ?? "Unknown Reservoir")
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text(anglersFormattedString)
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     
                     Spacer()
@@ -114,18 +114,18 @@ struct ActiveTripView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Running Stopwatch Display
                 VStack(spacing: 2) {
                     Text("ELAPSED DURATION")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                     
                     Text(viewModel.formattedElapsedTime)
                         .cvFont(CVFont.telemetryHeavy)
                         .font(.system(size: 38, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                 }
                 .padding(.vertical, 4)
             }
@@ -140,27 +140,27 @@ struct ActiveTripView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Total Fish")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                     
                     Text("\(viewModel.totalCatchesCount)")
                         .cvFont(CVFont.telemetryMedium)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Divider()
                     .frame(height: 36)
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Total Weight Telemetry
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Total Weight")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                     
                     Text(String(format: "%.2f lbs", viewModel.totalWeight))
                         .cvFont(CVFont.telemetryMedium)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -221,15 +221,15 @@ struct ActiveTripView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "fish")
                             .font(.largeTitle)
-                            .foregroundStyle(Color.secondary.opacity(0.6))
+                            .foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
                         
                         Text("No Catches Logged Yet")
                             .cvFont(CVFont.primaryBody)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text("Tap 'Record Fish' above to log your first catch for this trip.")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
@@ -250,26 +250,26 @@ struct ActiveTripView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(catchItem.species?.name ?? "Unknown Species")
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     HStack(spacing: 8) {
                         Text(catchItem.angler?.name ?? "Unknown Angler")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("•")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(catchItem.timestamp.formatted(date: .omitted, time: .shortened))
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     
                     if let comment = catchItem.comment, !comment.isEmpty {
                         Text(comment)
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                             .lineLimit(1)
                             .padding(.top, 2)
                     }
@@ -285,17 +285,14 @@ struct ActiveTripView: View {
     }
     
     // MARK: - Helpers
-    
-    // MARK: - Helpers
 
     private var anglersFormattedString: String {
         let anglers = viewModel.trip.anglers
         guard !anglers.isEmpty else { return "No Anglers Assigned" }
         
-        // Sorts angler names alphabetically and joins them with commas
         return anglers
             .map { $0.name }
             .sorted()
             .joined(separator: ", ")
     }
-}
+} 
