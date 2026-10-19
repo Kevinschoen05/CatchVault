@@ -1,0 +1,56 @@
+CatchVault UI Polish Process Summary
+This document formalizes the screen-by-screen refinement workflow used to audit, adjust, and verify styling, legibility, and design system token compliance across the application.
+
+1. Strategic Goals & Invariants
+Surgical Precision: Focus exclusively on specific styling and contrast defects per screen. Do not modify view structures, query parameters, or navigation flows unless explicitly requested.
+
+Light & Dark Mode Parity: Verify every visual change across both Light Mode and Dark Mode settings on physical hardware before concluding a screen's review.
+
+Token-Level Standardization: Prioritize updating shared design tokens over adding ad-hoc, view-specific color overrides to maintain app-wide consistency.
+
+2. The 4-Step Screen Refinement Protocol
++-------------------------------------------------------------------------------+
+| Step 1: Physical Device Capture                                               |
+|   - Provide screenshot(s) of the screen as rendered on physical hardware.    |
+|                                                                               |
+| Step 2: Diagnostic Audit & Approach Confirmation                              |
+|   - Identify contrast gaps, hierarchy issues, or token mismatches.            |
+|   - Agree on targeted code changes before touching source files.              |
+|                                                                               |
+| Step 3: Surgical Code Implementation                                           |
+|   - Apply minimal modifications directly to relevant view or design token files.|
+|                                                                               |
+| Step 4: Dual-Mode Verification & Handoff                                       |
+|   - Verify layout and legibility in Light & Dark modes on device, then proceed. |
++-------------------------------------------------------------------------------+
+Step 1: Physical Device Capture
+The user captures and shares screenshots from an active device or simulator session (capturing both Light and Dark modes when applicable).
+
+Step 2: Diagnostic Audit & Approach Confirmation
+Before editing code, analyze the visual elements against design invariants:
+
+Background Canvas vs. Card Containers: Check contrast boundaries between Layer 0 (backgroundMain) and Layer 1 (surfaceCard / warm sand cards).
+
+Text & Contrast Compliance: Ensure text resting inside warm sand cards remains legible across mode shifts (e.g., preventing system Color.primary from flipping to white over light card surfaces in Dark Mode).
+
+Control Geometry & Touch Targets: Confirm interactive controls maintain minimum 44pt touch geometry bounds.
+
+Step 3: Surgical Code Implementation
+Apply targeted edits to source files:
+
+Use dedicated card-scoped semantic tokens (textOnCardPrimary, textOnCardSecondary) in Colors.swift using UIColor trait resolvers for card-internal elements.
+
+Update targeted views (ReservoirHome.swift, StartTripView.swift, etc.) by swapping unmanaged native color calls (.primary, .secondary) for explicit design system tokens.
+
+Step 4: Dual-Mode Verification & Handoff
+Rebuild the project (Cmd + B), deploy to the physical target device, and confirm that elements render clearly across both appearance modes before moving to the next view.
+
+3. Key Design System Patterns Established During Polish
+Card-Scoped Trait Resolvers:
+Because Layer 1 card containers (surfaceCard / warm sand) remain light across both Light and Dark system modes, text and icons resting inside cards must be explicitly bound to dark slate tokens (textOnCardPrimary, textOnCardSecondary) rather than generic system colors that invert in Dark Mode.
+
+Form Input & Control Prompt Locking:
+Custom inputs resting inside card containers (e.g., TextField prompts and compact DatePicker pills) require explicit .foregroundStyle(...) or .tint(...) modifiers to prevent system dark-mode overrides from degrading text contrast.
+
+Full-Width Layout Expansion:
+To ensure card containers align uniformly down the vertical stack, card content wrappers utilize .frame(maxWidth: .infinity, alignment: .leading) to prevent cards from collapsing around narrow child views (such as isolated date pickers).

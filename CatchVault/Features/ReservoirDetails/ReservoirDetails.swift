@@ -54,7 +54,7 @@ public struct ReservoirDetailsView: View {
     
     // MARK: - Initializer
     
-     init(reservoir: Reservoir) {
+    init(reservoir: Reservoir) {
         self.reservoir = reservoir
     }
     
@@ -126,53 +126,53 @@ public struct ReservoirDetailsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Water Body Telemetry")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 HStack(spacing: 12) {
                     // Total Trips Metric
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Trips")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalTripsCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Total Fish Count Metric
                     VStack(alignment: .center, spacing: 4) {
                         Text("Total Fish")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalFishCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Total Weight (lbs) Metric
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Total Mass")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(String(format: "%.2f lbs", totalWeight))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -218,7 +218,7 @@ public struct ReservoirDetailsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Trip History")
                 .cvFont(CVFont.sectionHeader)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.white)
                 .padding(.leading, 4)
             
             if filteredTrips.isEmpty {
@@ -250,11 +250,11 @@ public struct ReservoirDetailsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(formattedDate)
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text(anglerNames.isEmpty ? "No Anglers Recorded" : anglerNames)
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                             .lineLimit(1)
                     }
                     
@@ -277,18 +277,18 @@ public struct ReservoirDetailsView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Telemetry Row: Fish Count & Mass
                 HStack(spacing: 16) {
                     HStack(spacing: 6) {
                         Text("Fish Landed:")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(catchesCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     
                     Spacer()
@@ -296,11 +296,11 @@ public struct ReservoirDetailsView: View {
                     HStack(spacing: 6) {
                         Text("Total Mass:")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(String(format: "%.2f lbs", totalMass))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                 }
             }
@@ -313,11 +313,11 @@ public struct ReservoirDetailsView: View {
             VStack(spacing: 8) {
                 Text("No Trips Found")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("No recorded fishing trips match the active year filter for this reservoir.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -349,11 +349,11 @@ private struct ReservoirCatchMapView: View {
                     
                     Text("Reservoir Catch Map")
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Text("No GPS coordinates recorded for catches in this temporal view.")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

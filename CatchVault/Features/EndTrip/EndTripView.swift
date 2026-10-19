@@ -49,7 +49,7 @@ struct EndTripView: View {
                     Button("Resume") {
                         dismiss()
                     }
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .disabled(viewModel.isSaving)
                 }
             }
@@ -74,57 +74,57 @@ struct EndTripView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(viewModel.trip.reservoir?.name ?? "Unknown Reservoir")
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text(viewModel.anglersFormattedString)
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     Spacer()
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Final Elapsed Duration Display
                 VStack(spacing: 2) {
                     Text("FINAL TRIP DURATION")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                     
                     Text(viewModel.formattedFinalDuration)
                         .cvFont(CVFont.telemetryHeavy)
                         .font(.system(size: 34, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                 }
                 .padding(.vertical, 4)
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Aggregated Catch Telemetry
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Fish")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         Text("\(viewModel.totalCatchesCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Total Weight")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         Text(String(format: "%.2f lbs", viewModel.totalWeight))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
@@ -138,19 +138,19 @@ struct EndTripView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Session Species Breakdown")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 if viewModel.speciesSummary.isEmpty {
                     Text("No catches recorded for this session.")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                         .padding(.vertical, 4)
                 } else {
                     ForEach(viewModel.speciesSummary, id: \.speciesName) { item in
                         HStack {
                             Text(item.speciesName)
                                 .cvFont(CVFont.primaryBody)
-                                .foregroundStyle(Color.primary)
+                                .foregroundStyle(Color.textOnCardPrimary)
                             Spacer()
                             Text("\(item.count) landed")
                                 .cvFont(CVFont.metadata)
@@ -168,14 +168,20 @@ struct EndTripView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Trip Notes & Observations")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
-                TextField("Water clarity, weather, active lures, tactics...", text: $viewModel.tripNotes, axis: .vertical)
-                    .cvFont(CVFont.primaryBody)
-                    .lineLimit(4...8)
-                    .padding(8)
-                    .background(Color.surfaceTertiary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                TextField(
+                    "",
+                    text: $viewModel.tripNotes,
+                    prompt: Text("Water clarity, weather, active lures, tactics...").foregroundStyle(Color.textOnCardSecondary.opacity(0.6)),
+                    axis: .vertical
+                )
+                .cvFont(CVFont.primaryBody)
+                .foregroundStyle(Color.textOnCardPrimary)
+                .lineLimit(4...8)
+                .padding(10)
+                .background(Color.surfaceSecondary.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
         }
     }

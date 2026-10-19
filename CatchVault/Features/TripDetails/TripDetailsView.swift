@@ -45,7 +45,7 @@ public struct TripDetailsView: View {
         trip.catches.count
     }
     
-    /// Cumulative weight landed in pounds
+     /// Cumulative weight landed in pounds
     private var totalWeight: Double {
         trip.catches.reduce(0.0) { $0 + $1.weight }
     }
@@ -108,64 +108,64 @@ public struct TripDetailsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(trip.reservoir?.name ?? "Unknown Reservoir")
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text(formattedAnglers)
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     Spacer()
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Session Timing & Human-Readable Elapsed Duration
                 VStack(spacing: 4) {
                     Text("SESSION DURATION")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                     
                     Text(formattedDuration)
                         .cvFont(CVFont.telemetryHeavy)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     
                     Text(trip.startTime.formatted(date: .abbreviated, time: .shortened))
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                 }
                 .padding(.vertical, 4)
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Telemetry Metrics Grid
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Fish")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalCatchesCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Total Mass")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(String(format: "%.2f lbs", totalWeight))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
@@ -193,33 +193,33 @@ public struct TripDetailsView: View {
                     
                     Text("Weather & Environmental Snapshot")
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 if let summary = trip.weatherSummary, !summary.isEmpty {
                     Text(summary)
                         .cvFont(CVFont.primaryBody)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     HStack(spacing: 16) {
                         if let temp = trip.temperature {
                             Text(String(format: "Temp: %.1f°F", temp))
                                 .cvFont(CVFont.metadata)
-                                .foregroundStyle(Color.secondary)
+                                .foregroundStyle(Color.textOnCardSecondary)
                         }
                         if let wind = trip.windSpeed {
                             Text(String(format: "Wind: %.1f mph", wind))
                                 .cvFont(CVFont.metadata)
-                                .foregroundStyle(Color.secondary)
+                                .foregroundStyle(Color.textOnCardSecondary)
                         }
                     }
                 } else {
                     Text("No weather observations were recorded during this session.")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                 }
             }
         }
@@ -230,7 +230,7 @@ public struct TripDetailsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Catch Log")
                 .cvFont(CVFont.sectionHeader)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.white)
                 .padding(.leading, 4)
             
             if sortedCatches.isEmpty {
@@ -251,11 +251,11 @@ public struct TripDetailsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(catchItem.species?.name ?? "Unknown Species")
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text("Landed by \(catchItem.angler?.name ?? "Unknown Angler")")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                     
                     Spacer()
@@ -267,17 +267,17 @@ public struct TripDetailsView: View {
                         
                         Text(catchItem.timestamp.formatted(date: .omitted, time: .shortened))
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                     }
                 }
                 
                 if let comment = catchItem.comment, !comment.isEmpty {
                     Divider()
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     Text(comment)
                         .cvFont(CVFont.primaryBody)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                 }
             }
         }
@@ -289,11 +289,11 @@ public struct TripDetailsView: View {
             VStack(spacing: 8) {
                 Text("No Fish Recorded")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("No fish catches were logged for this session.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -307,11 +307,11 @@ public struct TripDetailsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Session Notes & Tactics")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text(notes)
                     .cvFont(CVFont.primaryBody)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
             }
         }
     }
@@ -339,11 +339,11 @@ private struct TripCatchMapView: View {
                     
                     Text("Session Catch Map")
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Text("No GPS coordinates recorded for catches on this trip.")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -73,7 +73,7 @@ struct AnglerTotalsView: View {
             HStack {
                 Text("Reservoir")
                     .cvFont(CVFont.primaryBody)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Spacer()
                 
@@ -110,7 +110,7 @@ struct AnglerTotalsView: View {
                 HStack {
                     Text(angler.name)
                         .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                     
                     Spacer()
                     
@@ -120,7 +120,7 @@ struct AnglerTotalsView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // High-Density Telemetry Matrix (Row 1)
                 HStack(spacing: 12) {
@@ -128,11 +128,11 @@ struct AnglerTotalsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Catches")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalCatches)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -140,17 +140,17 @@ struct AnglerTotalsView: View {
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Total Mass (lbs)
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Total Mass")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(String(format: "%.2f lbs", totalMass))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -163,11 +163,11 @@ struct AnglerTotalsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Trips")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalTrips)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -175,17 +175,17 @@ struct AnglerTotalsView: View {
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Zero-Fish Trips Count
                     VStack(alignment: .center, spacing: 4) {
                         Text("Zero-Fish Trips")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(zeroFishTripsCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(zeroFishTripsCount > 0 ? Color.secondary : Color.primary)
+                            .foregroundStyle(zeroFishTripsCount > 0 ? Color.textOnCardSecondary : Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -193,17 +193,17 @@ struct AnglerTotalsView: View {
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Catch Avg / Trip
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Catch Avg/Trip")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(String(format: "%.1f", catchesPerTrip))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -214,29 +214,29 @@ struct AnglerTotalsView: View {
                 HStack {
                     Text("Average Fish Weight")
                         .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                     Spacer()
                     Text(String(format: "%.2f lbs", avgMassPerFish))
                         .cvFont(CVFont.telemetryMedium)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textOnCardPrimary)
                 }
                 .padding(.top, 2)
                 
                 // Species Breakdown Ledger
                 if !speciesFrequency.isEmpty {
                     Divider()
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Species Breakdown")
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         ForEach(speciesFrequency, id: \.name) { species in
                             HStack {
                                 Text(species.name)
                                     .cvFont(CVFont.primaryBody)
-                                    .foregroundStyle(Color.primary)
+                                    .foregroundStyle(Color.textOnCardPrimary)
                                 
                                 Spacer()
                                 
@@ -258,15 +258,15 @@ struct AnglerTotalsView: View {
             VStack(spacing: 8) {
                 Image(systemName: "person.3")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.secondary.opacity(0.6))
+                    .foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
                 
                 Text("No Anglers Found")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Text("Log trips and record catches to view individual angler statistics.")
                     .cvFont(CVFont.metadata)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color.textOnCardSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)

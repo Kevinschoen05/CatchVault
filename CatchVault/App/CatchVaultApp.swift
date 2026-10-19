@@ -1,8 +1,7 @@
 //
 //  CatchVaultApp.swift
 //  CatchVault
-//
-//  Created by Kevin Schoen on 7/1/26.
+//  Path: CatchVault/App/CatchVaultApp.swift
 //
 
 import SwiftUI
@@ -27,7 +26,7 @@ struct CatchVaultApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ReservoirHome() // Root presentation dashboard entry point
+            ContentView() // Root presentation dispatcher (handles LaunchView -> ReservoirHome)
         }
         .modelContainer(container) // Cascade context through the view hierarchy
     }

@@ -46,10 +46,6 @@ struct RecordFishView: View {
             }
             .navigationTitle("Record Catch")
             .navigationBarTitleDisplayMode(.inline)
-            .task {
-                print("🚀 [RECORD FISH VIEW] Task modifier triggered on view appearance!")
-                await viewModel.captureLocation()
-            }
             .toolbarBackground(Color.backgroundMain, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
@@ -67,7 +63,7 @@ struct RecordFishView: View {
                         }
                     }
                     .bold()
-                    .foregroundStyle(viewModel.isValid ? Color.brandAccent : Color.secondary)
+                    .foregroundStyle(viewModel.isValid ? Color.brandAccent : Color.secondary.opacity(0.5))
                     .disabled(!viewModel.isValid || viewModel.isSaving)
                 }
             }
@@ -92,7 +88,7 @@ struct RecordFishView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Angler")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 HStack {
                     Picker("Select Angler", selection: $viewModel.selectedAngler) {
@@ -115,7 +111,7 @@ struct RecordFishView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Species")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 HStack {
                     Picker("Select Species", selection: $viewModel.selectedSpecies) {
@@ -131,7 +127,7 @@ struct RecordFishView: View {
                 .frame(minHeight: 44)
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 if !viewModel.isAddingNewSpecies {
                     Button(action: { viewModel.isAddingNewSpecies = true }) {
@@ -148,8 +144,13 @@ struct RecordFishView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
-                            TextField("New Species Name", text: $viewModel.newSpeciesName)
-                                .textFieldStyle(.roundedBorder)
+                            TextField(
+                                "",
+                                text: $viewModel.newSpeciesName,
+                                prompt: Text("New Species Name").foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
+                            )
+                            .textFieldStyle(.roundedBorder)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             
                             Button("Add") {
                                 _ = viewModel.createAndSelectSpecies(
@@ -166,7 +167,7 @@ struct RecordFishView: View {
                                 viewModel.newSpeciesName = ""
                                 viewModel.speciesValidationError = nil
                             }
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.textOnCardSecondary)
                         }
                         
                         if let error = viewModel.speciesValidationError {
@@ -186,17 +187,22 @@ struct RecordFishView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Weight (lbs)")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 HStack {
-                    TextField("0.00", text: $viewModel.weightInput)
-                        .keyboardType(.decimalPad)
-                        .cvFont(CVFont.telemetryHeavy)
-                        .font(.system(size: 28, weight: .bold, design: .monospaced))
+                    TextField(
+                        "",
+                        text: $viewModel.weightInput,
+                        prompt: Text("0.00").foregroundStyle(Color.textOnCardSecondary.opacity(0.6))
+                    )
+                    .keyboardType(.decimalPad)
+                    .cvFont(CVFont.telemetryHeavy)
+                    .font(.system(size: 28, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color.textOnCardPrimary)
                     
                     Text("lbs")
                         .cvFont(CVFont.primaryBody)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.textOnCardSecondary)
                 }
                 .frame(minHeight: 44)
             }
@@ -208,7 +214,7 @@ struct RecordFishView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Media")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 // Photo Attachment Control
                 PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
@@ -217,7 +223,7 @@ struct RecordFishView: View {
                             .foregroundColor(Color.brandAccent)
                         Text(viewModel.selectedImageData == nil ? "Attach Catch Photo" : "Photo Attached")
                             .cvFont(CVFont.primaryBody)
-                            .foregroundColor(Color.primary)
+                            .foregroundColor(Color.textOnCardPrimary)
                         Spacer()
                         if viewModel.selectedImageData != nil {
                             Image(systemName: "checkmark.circle.fill")
@@ -235,25 +241,25 @@ struct RecordFishView: View {
                 }
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 // Location Indicator
                 HStack(spacing: 8) {
                     Image(systemName: "location.fill")
-                        .foregroundColor(viewModel.capturedLatitude != nil ? Color.statusActive : .secondary)
+                        .foregroundColor(viewModel.capturedLatitude != nil ? Color.statusActive : Color.textOnCardSecondary)
                     
                     if viewModel.isFetchingLocation {
                         Text("Acquiring GPS coordinates...")
                             .cvFont(CVFont.metadata)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.textOnCardSecondary)
                     } else if let lat = viewModel.capturedLatitude, let lon = viewModel.capturedLongitude {
                         Text(String(format: "GPS: %.4f, %.4f", lat, lon))
                             .cvFont(CVFont.metadata)
-                            .foregroundColor(.primary)
+                            .foregroundColor(Color.textOnCardPrimary)
                     } else {
                         Text("GPS Location Unavailable")
                             .cvFont(CVFont.metadata)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.textOnCardSecondary)
                     }
                 }
                 .frame(minHeight: 36)
@@ -266,11 +272,17 @@ struct RecordFishView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Notes")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
-                TextField("Lure, depth, structural observations...", text: $viewModel.comment, axis: .vertical)
-                    .cvFont(CVFont.primaryBody)
-                    .lineLimit(3...5)
+                TextField(
+                    "",
+                    text: $viewModel.comment,
+                    prompt: Text("Lure, depth, structural observations...").foregroundStyle(Color.textOnCardSecondary.opacity(0.6)),
+                    axis: .vertical
+                )
+                .cvFont(CVFont.primaryBody)
+                .foregroundStyle(Color.textOnCardPrimary)
+                .lineLimit(3...5)
             }
         }
     }

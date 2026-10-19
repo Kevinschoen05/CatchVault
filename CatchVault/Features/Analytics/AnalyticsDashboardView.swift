@@ -90,21 +90,21 @@ struct AnalyticsDashboardView: View {
                 // Header text formatting fixed to explicitly format years without commas
                 Text(selectedYear == nil ? "All-Time Performance Summary" : "\(String(format: "%d", selectedYear!)) Performance Summary")
                     .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textOnCardPrimary)
                 
                 Divider()
-                    .background(Color.secondary.opacity(0.2))
+                    .background(Color.textOnCardSecondary.opacity(0.2))
                 
                 HStack(spacing: 12) {
                     // Total Fish Stat
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Fish")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalFishCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -112,17 +112,17 @@ struct AnalyticsDashboardView: View {
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Total Trips Stat
                     VStack(alignment: .center, spacing: 4) {
                         Text("Total Trips")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text("\(totalTripsCount)")
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -130,17 +130,17 @@ struct AnalyticsDashboardView: View {
                     
                     Divider()
                         .frame(height: 32)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(Color.textOnCardSecondary.opacity(0.2))
                     
                     // Total Mass Stat (Line limit and minimum scale factor prevent multi-line wrapping)
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Total Mass")
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                         
                         Text(String(format: "%.2f lbs", totalMassLbs))
                             .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -201,11 +201,11 @@ struct AnalyticsDashboardView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
                             .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textOnCardPrimary)
                         
                         Text(subtitle)
                             .cvFont(CVFont.metadata)
-                            .foregroundStyle(Color.secondary)
+                            .foregroundStyle(Color.textOnCardSecondary)
                             .lineLimit(2)
                     }
                     
@@ -213,7 +213,7 @@ struct AnalyticsDashboardView: View {
                     
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Color.textOnCardSecondary)
                 }
                 .contentShape(Rectangle())
             }
