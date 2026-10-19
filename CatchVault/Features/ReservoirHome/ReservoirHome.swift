@@ -93,90 +93,90 @@ public struct ReservoirHome: View {
     
     
     private func reservoirTile(for reservoir: Reservoir) -> some View {
-        let trips = filteredTrips(for: reservoir)
-        let tripCount = trips.count
-        let fishCount = trips.reduce(0) { $0 + $1.catches.count }
-        
-        return CVCardContainer {
-            VStack(alignment: .leading, spacing: 14) {
-                NavigationLink(value: reservoir) {
-                    HStack {
-                        Text(reservoir.name)
-                            .cvFont(CVFont.sectionHeader)
-                            .foregroundStyle(Color.brandPrimary)
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Color.secondary)
-                    }
-                }
-                
-                Divider()
-                    .background(Color.surfaceTertiary)
-                
-                VStack(spacing: 8) {
-                    HStack {
-                        Text("Total Trips")
-                            .cvFont(CVFont.primaryBody)
-                            .foregroundStyle(Color.secondary)
-                        
-                        Spacer()
-                        
-                        Text("\(tripCount)")
-                            .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+            let trips = filteredTrips(for: reservoir)
+            let tripCount = trips.count
+            let fishCount = trips.reduce(0) { $0 + $1.catches.count }
+            
+            return CVCardContainer {
+                VStack(alignment: .leading, spacing: 14) {
+                    NavigationLink(value: reservoir) {
+                        HStack {
+                            Text(reservoir.name)
+                                .cvFont(CVFont.sectionHeader)
+                                .foregroundStyle(Color.textOnCardPrimary)
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.textOnCardSecondary)
+                        }
                     }
                     
-                    HStack {
-                        Text("Total Fish")
-                            .cvFont(CVFont.primaryBody)
-                            .foregroundStyle(Color.secondary)
+                    Divider()
+                        .background(Color.textOnCardSecondary.opacity(0.3))
+                    
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Total Trips")
+                                .cvFont(CVFont.primaryBody)
+                                .foregroundStyle(Color.textOnCardSecondary)
+                            
+                            Spacer()
+                            
+                            Text("\(tripCount)")
+                                .cvFont(CVFont.telemetryMedium)
+                                .foregroundStyle(Color.textOnCardPrimary)
+                        }
                         
-                        Spacer()
-                        
-                        Text("\(fishCount)")
-                            .cvFont(CVFont.telemetryMedium)
-                            .foregroundStyle(Color.primary)
+                        HStack {
+                            Text("Total Fish")
+                                .cvFont(CVFont.primaryBody)
+                                .foregroundStyle(Color.textOnCardSecondary)
+                            
+                            Spacer()
+                            
+                            Text("\(fishCount)")
+                                .cvFont(CVFont.telemetryMedium)
+                                .foregroundStyle(Color.textOnCardPrimary)
+                        }
                     }
-                }
-                
-                Button(action: {
-                    selectedReservoirForTrip = reservoir
-                }) {
-                    HStack {
-                        Image(systemName: "play.fill")
-                        Text("Start Trip")
+                    
+                    Button(action: {
+                        selectedReservoirForTrip = reservoir
+                    }) {
+                        HStack {
+                            Image(systemName: "play.fill")
+                            Text("Start Trip")
+                        }
+                        .cvFont(CVFont.actionLabel)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.brandAccent)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
-                    .cvFont(CVFont.actionLabel)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(Color.brandAccent)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
-    }
-    
-    private var emptyStateCard: some View {
-        CVCardContainer {
-            VStack(spacing: 8) {
-                Text("No Reservoirs Found")
-                    .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.primary)
-                
-                Text("Add your first reservoir location below to begin tracking trips and catches.")
-                    .cvFont(CVFont.primaryBody)
-                    .foregroundStyle(Color.secondary)
-                    .multilineTextAlignment(.center)
+        
+        private var emptyStateCard: some View {
+            CVCardContainer {
+                VStack(spacing: 8) {
+                    Text("No Reservoirs Found")
+                        .cvFont(CVFont.sectionHeader)
+                        .foregroundStyle(Color.textOnCardPrimary)
+                    
+                    Text("Add your first reservoir location below to begin tracking trips and catches.")
+                        .cvFont(CVFont.primaryBody)
+                        .foregroundStyle(Color.textOnCardSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity)
         }
-    }
     
     private var addReservoirButtonCard: some View {
         CVCardContainer {

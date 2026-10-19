@@ -4,6 +4,7 @@
 //
 //  Created by Kevin Schoen on 7/29/26.
 //
+
 import SwiftUI
 import SwiftData
 
@@ -25,7 +26,7 @@ struct StartTripView: View {
     private let initialReservoir: Reservoir?
     private let onTripStarted: ((Trip) -> Void)?
     
-        init(reservoir: Reservoir? = nil, onTripStarted: ((Trip) -> Void)? = nil) {
+    init(reservoir: Reservoir? = nil, onTripStarted: ((Trip) -> Void)? = nil) {
         self.initialReservoir = reservoir
         self.onTripStarted = onTripStarted
         _selectedReservoir = State(initialValue: reservoir)
@@ -65,11 +66,11 @@ struct StartTripView: View {
                     .cvFont(CVFont.primaryBody)
                     .foregroundColor(Color.white)
                 }
-            }.toolbarBackground(Color.backgroundMain, for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
+            }
+            .toolbarBackground(Color.backgroundMain, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
-        }
-        
+    }
     
     // MARK: - Section Views
     
@@ -156,12 +157,18 @@ struct StartTripView: View {
                 
                 // Inline New Angler Input
                 HStack(spacing: 8) {
-                    TextField("Add new angler...", text: $newAnglerName)
-                        .cvFont(CVFont.primaryBody)
-                        .padding(.horizontal, 12)
-                        .frame(height: 44)
-                        .background(Color.inputField)
-                        .cornerRadius(8)
+                    TextField(
+                        "",
+                        text: $newAnglerName,
+                        prompt: Text("Add new angler...")
+                            .foregroundStyle(Color.brandPrimary)
+                    )
+                    .cvFont(CVFont.primaryBody)
+                    .foregroundStyle(Color.brandPrimary)
+                    .padding(.horizontal, 12)
+                    .frame(height: 44)
+                    .background(Color.inputField)
+                    .cornerRadius(8)
                     
                     Button(action: addNewAnglerInline) {
                         Text("Add")
@@ -193,9 +200,12 @@ struct StartTripView: View {
                 )
                 .datePickerStyle(.compact)
                 .cvFont(CVFont.primaryBody)
+                .tint(Color.brandPrimary)
+                .foregroundStyle(Color.brandPrimary)
                 .labelsHidden()
                 .frame(height: 44)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
     
@@ -209,7 +219,7 @@ struct StartTripView: View {
                 Spacer()
             }
             .frame(height: 50)
-            .background(isValid ?  Color.brandAccent : Color.brandPrimary)
+            .background(isValid ? Color.brandAccent : Color.brandPrimary)
             .cornerRadius(12)
         }
         .disabled(!isValid)
