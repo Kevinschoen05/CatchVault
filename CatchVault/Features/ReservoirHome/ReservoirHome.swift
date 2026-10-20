@@ -73,7 +73,7 @@ public struct ReservoirHome: View {
             .toolbarBackground(Color.backgroundMain, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .sheet(isPresented: $showingAddReservoir) {
-                Text("Add Reservoir View")
+                AddReservoirView()
             }
             .sheet(item: $selectedReservoirForTrip) { reservoir in
                 StartTripView(reservoir: reservoir,
