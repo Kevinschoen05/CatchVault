@@ -11,6 +11,7 @@ struct ActiveTripView: View {
     /// Modal presentation triggers for operational sub-workflows.
     @State private var showingRecordFishSheet: Bool = false
     @State private var showingEndTripSheet: Bool = false
+    @State private var showingDiscardAlert: Bool = false
     
     // MARK: - Initializer
     
@@ -21,7 +22,7 @@ struct ActiveTripView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Layer 0 Base Canvas Background (Standardized app-wide backdrop)
+                // Layer 0 Base Canvas Background
                 Color.backgroundMain
                     .ignoresSafeArea()
                 
@@ -49,6 +50,15 @@ struct ActiveTripView: View {
                         .font(.headline)
                         .foregroundStyle(Color.white)
                 }
+                
+                // Destructive Discard Action Trigger
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Discard") {
+                        showingDiscardAlert = true
+                    }
+                    .cvFont(CVFont.metadata)
+                    .foregroundStyle(Color.red)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.backgroundMain, for: .navigationBar)
@@ -59,6 +69,14 @@ struct ActiveTripView: View {
             .onDisappear {
                 viewModel.pauseTimer()
             }
+            .alert("Discard Active Trip?", isPresented: $showingDiscardAlert) {
+                Button("Resume Session", role: .cancel) { }
+                Button("Discard Trip", role: .destructive) {
+                    discardActiveTrip()
+                }
+            } message: {
+                Text("Are you sure you want to quit? All catches logged during this session will be permanently deleted.")
+            }
             // MARK: - Modal Workflows
             .sheet(isPresented: $showingRecordFishSheet) {
                 RecordFishView(trip: viewModel.trip)
@@ -68,7 +86,6 @@ struct ActiveTripView: View {
                 EndTripView(
                     trip: viewModel.trip,
                     onTripCompleted: {
-                        // Dismiss parent ActiveTripView workspace cleanly back to ReservoirHome
                         dismiss()
                     }
                 )
@@ -79,7 +96,6 @@ struct ActiveTripView: View {
     
     // MARK: - Subviews
     
-    /// Layer 1 Container displaying Reservoir name, Angler roster, and running stopwatch.
     private var statusHeaderCard: some View {
         CVCardContainer {
             VStack(spacing: 12) {
@@ -96,7 +112,6 @@ struct ActiveTripView: View {
                     
                     Spacer()
                     
-                    // Active Status Indicator Pill
                     HStack(spacing: 6) {
                         Circle()
                             .fill(Color.statusActive)
@@ -116,7 +131,6 @@ struct ActiveTripView: View {
                 Divider()
                     .background(Color.textOnCardSecondary.opacity(0.2))
                 
-                // Running Stopwatch Display
                 VStack(spacing: 2) {
                     Text("ELAPSED DURATION")
                         .cvFont(CVFont.metadata)
@@ -132,11 +146,9 @@ struct ActiveTripView: View {
         }
     }
     
-    /// Layer 1 Container displaying total fish landed and cumulative weight telemetry.
     private var telemetrySummaryCard: some View {
         CVCardContainer {
             HStack(spacing: 16) {
-                // Total Catches Telemetry
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Total Fish")
                         .cvFont(CVFont.metadata)
@@ -152,7 +164,6 @@ struct ActiveTripView: View {
                     .frame(height: 36)
                     .background(Color.textOnCardSecondary.opacity(0.2))
                 
-                // Total Weight Telemetry
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Total Weight")
                         .cvFont(CVFont.metadata)
@@ -167,10 +178,8 @@ struct ActiveTripView: View {
         }
     }
     
-    /// Primary Action Controls with distinct tactical styling.
     private var actionButtonsSection: some View {
         VStack(spacing: 12) {
-            // "Record Fish" Primary Tactical CTA (Beacon Amber)
             Button {
                 showingRecordFishSheet = true
             } label: {
@@ -181,14 +190,13 @@ struct ActiveTripView: View {
                         .cvFont(CVFont.actionLabel)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 50) // Enforces explicit 50pt primary CTA height
+                .frame(height: 50)
                 .background(Color.brandAccent)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
             
-            // "End Trip" Secondary CTA (Slate Blue Surface Secondary)
             Button {
                 showingEndTripSheet = true
             } label: {
@@ -199,7 +207,7 @@ struct ActiveTripView: View {
                         .cvFont(CVFont.actionLabel)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 44) // 44pt touch geometry
+                .frame(height: 44)
                 .background(Color.surfaceSecondary)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -208,7 +216,6 @@ struct ActiveTripView: View {
         }
     }
     
-    /// Chronological list of catches logged during the active session.
     private var catchTimelineSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Session Timeline")
@@ -243,7 +250,6 @@ struct ActiveTripView: View {
         }
     }
     
-    /// Individual catch tile inside Layer 1 CVCardContainer.
     private func catchRowTile(for catchItem: FishCatch) -> some View {
         CVCardContainer {
             HStack(alignment: .center) {
@@ -284,6 +290,18 @@ struct ActiveTripView: View {
         }
     }
     
+    // MARK: - Actions
+    
+    private func discardActiveTrip() {
+        modelContext.delete(viewModel.trip)
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            print("Failed to discard active trip: \(error)")
+        }
+    }
+    
     // MARK: - Helpers
 
     private var anglersFormattedString: String {
@@ -295,4 +313,4 @@ struct ActiveTripView: View {
             .sorted()
             .joined(separator: ", ")
     }
-} 
+}

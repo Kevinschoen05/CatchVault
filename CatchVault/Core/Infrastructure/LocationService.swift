@@ -12,7 +12,7 @@ public protocol LocationServiceProtocol {
 }
 
 /// Concrete implementation managing native CLLocationManager hardware interactions.
-public final class LocationService: NSObject, LocationServiceProtocol, CLLocationManagerDelegate {
+public final class LocationService: NSObject, ObservableObject, LocationServiceProtocol, CLLocationManagerDelegate {
     public static let shared = LocationService()
     
     private let locationManager = CLLocationManager()

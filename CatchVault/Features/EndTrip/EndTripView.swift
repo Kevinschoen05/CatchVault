@@ -9,6 +9,7 @@ struct EndTripView: View {
     var onTripCompleted: (() -> Void)?
     
     @State private var viewModel: EndTripViewModel
+    @State private var showingDiscardAlert: Bool = false
     
     init(trip: Trip, onTripCompleted: (() -> Void)? = nil) {
         _viewModel = State(initialValue: EndTripViewModel(trip: trip))
@@ -33,7 +34,7 @@ struct EndTripView: View {
                         // 3. Observations & Commentary Card (Multiline Notes)
                         observationsCard
                         
-                        // 4. Action Buttons ("Complete & Save Trip" & "Resume Session")
+                        // 4. Action Buttons ("Complete & Save Trip", "Resume Session", & "Discard Session")
                         actionsSection
                     }
                     .padding(.horizontal, 16)
@@ -61,12 +62,19 @@ struct EndTripView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
+            .alert("Discard Active Trip?", isPresented: $showingDiscardAlert) {
+                Button("Resume Session", role: .cancel) { }
+                Button("Discard Trip", role: .destructive) {
+                    discardActiveTrip()
+                }
+            } message: {
+                Text("Are you sure you want to quit? All catches logged during this session will be permanently deleted.")
+            }
         }
     }
     
     // MARK: - Subviews
     
-    /// Layer 1 Container displaying Reservoir, Angler Roster, Final Duration, and Total Metrics
     private var telemetryHeaderCard: some View {
         CVCardContainer {
             VStack(spacing: 12) {
@@ -86,7 +94,6 @@ struct EndTripView: View {
                 Divider()
                     .background(Color.textOnCardSecondary.opacity(0.2))
                 
-                // Final Elapsed Duration Display
                 VStack(spacing: 2) {
                     Text("FINAL TRIP DURATION")
                         .cvFont(CVFont.metadata)
@@ -102,7 +109,6 @@ struct EndTripView: View {
                 Divider()
                     .background(Color.textOnCardSecondary.opacity(0.2))
                 
-                // Aggregated Catch Telemetry
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total Fish")
@@ -132,7 +138,6 @@ struct EndTripView: View {
         }
     }
     
-    /// Breakdown of Species caught during session
     private var sessionHighlightsCard: some View {
         CVCardContainer {
             VStack(alignment: .leading, spacing: 10) {
@@ -162,7 +167,6 @@ struct EndTripView: View {
         }
     }
     
-    /// Observations & Notes Text Editor
     private var observationsCard: some View {
         CVCardContainer {
             VStack(alignment: .leading, spacing: 8) {
@@ -186,10 +190,9 @@ struct EndTripView: View {
         }
     }
     
-    /// Terminal CTAs
     private var actionsSection: some View {
         VStack(spacing: 12) {
-            // "Complete & Save Trip" Primary CTA (Beacon Amber)
+            // "Complete & Save Trip" Primary CTA
             Button {
                 Task {
                     if await viewModel.saveAndEndTrip(context: modelContext) {
@@ -234,6 +237,32 @@ struct EndTripView: View {
             }
             .buttonStyle(.plain)
             .disabled(viewModel.isSaving)
+            
+            // "Discard Session" Destructive CTA
+            Button {
+                showingDiscardAlert = true
+            } label: {
+                Text("Discard Trip Without Saving")
+                    .cvFont(CVFont.actionLabel)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .foregroundStyle(Color.red)
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isSaving)
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func discardActiveTrip() {
+        modelContext.delete(viewModel.trip)
+        do {
+            try modelContext.save()
+            onTripCompleted?()
+            dismiss()
+        } catch {
+            print("Failed to discard active trip: \(error)")
         }
     }
 }
