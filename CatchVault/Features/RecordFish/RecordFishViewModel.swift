@@ -113,7 +113,7 @@ final class RecordFishViewModel {
     
     /// Atomically creates and persists the FishCatch instance and connects relational contexts.
     @MainActor
-    func saveCatch(context: ModelContext) -> Bool {
+    func saveCatch(context: ModelContext) async -> Bool {
         guard isValid,
               let angler = selectedAngler,
               let species = selectedSpecies,
@@ -125,10 +125,15 @@ final class RecordFishViewModel {
         isSaving = true
         defer { isSaving = false }
         
-        // Handle image disk persistence if photo payload exists
+        // Handle background image compression and disk persistence if photo payload exists
         var savedImagePath: String? = nil
-        if let imageData = selectedImageData {
-            savedImagePath = saveImageToDisk(imageData: imageData)
+        if let imageData = selectedImageData, let uiImage = UIImage(data: imageData) {
+            do {
+                savedImagePath = try await ImageStorageService.shared.saveCatchPhoto(uiImage)
+            } catch {
+                errorMessage = "Failed to process photo: \(error.localizedDescription)"
+                return false
+            }
         }
         
         let catchTimestamp = Date()
@@ -161,23 +166,6 @@ final class RecordFishViewModel {
         } catch {
             errorMessage = "Failed to save catch: \(error.localizedDescription)"
             return false
-        }
-    }
-    
-    // MARK: - Sandboxed Storage Operations
-    
-    private func saveImageToDisk(imageData: Data) -> String? {
-        let fileName = "\(UUID().uuidString).jpg"
-        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            return nil
-        }
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
-        
-        do {
-            try imageData.write(to: fileURL, options: .atomic)
-            return fileName
-        } catch {
-            return nil
         }
     }
 }

@@ -58,8 +58,10 @@ struct RecordFishView: View {
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save Catch") {
-                        if viewModel.saveCatch(context: modelContext) {
-                            dismiss()
+                        Task {
+                            if await viewModel.saveCatch(context: modelContext) {
+                                dismiss()
+                            }
                         }
                     }
                     .bold()

@@ -13,9 +13,11 @@ public struct TripDetailsView: View {
     /// Target trip entity bound directly via value-based navigation
     let trip: Trip
     
+    @State private var selectedViewerImage: UIImage? = nil
+    
     // MARK: - Initializer
     
-     init(trip: Trip) {
+    init(trip: Trip) {
         self.trip = trip
     }
     
@@ -45,7 +47,7 @@ public struct TripDetailsView: View {
         trip.catches.count
     }
     
-     /// Cumulative weight landed in pounds
+    /// Cumulative weight landed in pounds
     private var totalWeight: Double {
         trip.catches.reduce(0.0) { $0 + $1.weight }
     }
@@ -96,6 +98,12 @@ public struct TripDetailsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.backgroundMain, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+        .fullScreenCover(item: Binding(
+            get: { selectedViewerImage.map { IdentifiableImage(image: $0) } },
+            set: { selectedViewerImage = $0?.image }
+        )) { item in
+            FullScreenPhotoViewer(image: item.image)
+        }
     }
     
     // MARK: - Subviews
@@ -247,7 +255,26 @@ public struct TripDetailsView: View {
     private func catchLogTile(for catchItem: FishCatch) -> some View {
         CVCardContainer {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
+                HStack(spacing: 12) {
+                    // Thumbnail trigger for FullScreenPhotoViewer
+                    if let relativePath = catchItem.imagePath {
+                        let thumbPath = ImageStorageService.shared.thumbnailPath(for: relativePath)
+                        if let thumbImage = ImageStorageService.shared.loadImage(relativePath: thumbPath) {
+                            Button {
+                                if let fullImage = ImageStorageService.shared.loadImage(relativePath: relativePath) {
+                                    selectedViewerImage = fullImage
+                                }
+                            } label: {
+                                Image(uiImage: thumbImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 52, height: 52)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    
                     VStack(alignment: .leading, spacing: 2) {
                         Text(catchItem.species?.name ?? "Unknown Species")
                             .cvFont(CVFont.sectionHeader)
@@ -315,6 +342,12 @@ public struct TripDetailsView: View {
             }
         }
     }
+}
+
+// MARK: - Identifiable Image Helper for Sheet Binding
+private struct IdentifiableImage: Identifiable {
+    let id = UUID()
+    let image: UIImage
 }
 
 // MARK: - Spatial Map Subview
