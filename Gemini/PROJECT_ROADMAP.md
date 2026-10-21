@@ -1,54 +1,59 @@
 # CatchVault Development Roadmap Checklist
 
 ## Milestone 1: Core Domain Engine
-- [x] 1.1 Entity Layout Initialization (Angler, Reservoir, Species, Trip, FishCatch)[cite: 44]
-- [x] 1.2 Relationship & CloudKit Rule Enforcement (@Relationship inverses, defaults)[cite: 44]
-- [x] 1.3 Cascade Validation Layer (Unit tests for delete rules and integrity constraints)[cite: 44]
+- [x] 1.1 Entity Layout Initialization (Angler, Reservoir, Species, Trip, FishCatch)[cite: 11, 12]
+- [x] 1.2 Relationship & CloudKit Rule Enforcement (@Relationship inverses, defaults)[cite: 11, 12]
+- [x] 1.3 Cascade Validation Layer (Unit tests for delete rules and integrity constraints)[cite: 11, 12]
 
 ## Milestone 2: Data Ingestion Pipeline (Anti-Corruption Bridge)
-- [x] 2.1 Legacy Payload Decoders (Polymorphic decoders for MongoDB JSON extracts)[cite: 44]
-- [x] 2.2 Deterministic Trip Aggregator (YYYY-MM-DD-ReservoirName synthetic parent keys)[cite: 44]
-- [x] 2.3 Chunked Migration Executer (MigrationManager execution and verification)[cite: 44]
+- [x] 2.1 Legacy Payload Decoders (Polymorphic decoders for MongoDB JSON extracts)[cite: 11, 12]
+- [x] 2.2 Deterministic Trip Aggregator (YYYY-MM-DD-ReservoirName synthetic parent keys)[cite: 11, 12]
+- [x] 2.3 Chunked Migration Executer (MigrationManager execution and verification)[cite: 11, 12]
 
 ## Milestone 3: Presentation Core & Infrastructure Bedrock
-- [x] 3.1 Design Token Architecture Setup (Colors.swift, Typography.swift)[cite: 44]
-- [x] 3.2 Custom UI Container Structure (CVCardContainer.swift)[cite: 44]
-- [x] 3.3 Interactive Core Presentation Views (ReservoirHome, ReservoirDetails, TripDetails)[cite: 44]
-- [x] 3.4 Infrastructure Service Proxies[cite: 44]
-  - [x] CoreLocation hardware integration shell (LocationService.swift)[cite: 44]
-  - [x] Weather serialization and fetch framework (WeatherService.swift)[cite: 44]
+- [x] 3.1 Design Token Architecture Setup (Colors.swift, Typography.swift)[cite: 11, 12]
+- [x] 3.2 Custom UI Container Structure (CVCardContainer.swift)[cite: 11, 12]
+- [x] 3.3 Interactive Core Presentation Views[cite: 11, 12]
+  - [x] ReservoirHome.swift (Main Dashboard, Year filter, Reservoir list, Navigation routing)[cite: 11, 12]
+  - [x] ReservoirDetailsView.swift (Aggregate metrics, MapKit spatial catch map, Chronological trip list, Navigation to TripDetails)[cite: 11, 12]
+  - [x] TripDetailsView.swift (Session overview, MapKit spatial catch map integration, Weather snapshot card, Chronological catch timeline, Notes)[cite: 11, 12]
+- [x] 3.4 Infrastructure Service Proxies[cite: 11, 12]
+  - [x] CoreLocation hardware integration shell (LocationService.swift)[cite: 11, 12]
+  - [x] Weather serialization and fetch framework (WeatherService.swift)[cite: 11, 12]
 
 ## Milestone 4: Operational Transactional Workflows (Live Logs)
-- [x] 4.1 Active Trip Timer & ViewModel (ActiveTripViewModel.swift)[cite: 44]
-- [x] 4.2 Start Trip Configuration Sheet (StartTripView.swift)[cite: 44]
-- [x] 4.3 Live Active Workspace (ActiveTripView.swift with Discard Trip action)[cite: 10, 44]
-- [x] 4.4 Record Fish Entry Form (RecordFishView.swift)[cite: 44]
-- [x] 4.5 End Trip Summary View (EndTripView.swift with WeatherKit Integration & Discard option)[cite: 10, 44]
+- [x] 4.1 Active Trip Timer & ViewModel (ActiveTripViewModel.swift with persistent stopwatch state)[cite: 11, 12]
+- [x] 4.2 Start Trip Configuration Sheet (StartTripView.swift)[cite: 11, 12]
+- [x] 4.3 Live Active Workspace (ActiveTripView.swift with real-time timeline)[cite: 11, 12]
+- [x] 4.4 Record Fish Entry Form (RecordFishView.swift with species search, weight entry, and GPS capture)[cite: 11, 12]
+- [x] 4.5 End Trip Summary View (EndTripView.swift with final observations and state locking)[cite: 11, 12]
 
 ## Milestone 5: High-Density Analytical Views & Dashboards
-- [x] 5.1 Analytics Dashboard Root (AnalyticsDashboardView.swift)[cite: 44]
-- [x] 5.2 Angler Totals Ledger (AnglerTotalsView.swift)[cite: 44]
-- [x] 5.3 Reservoir Leaderboard (ReservoirLeaderboardView.swift)[cite: 44]
-- [x] 5.4 Temporal Trends & Species Breakdown Charts (SpeciesBreakdown, CatchTrends)[cite: 44]
+- [x] 5.1 Analytics Dashboard Root (AnalyticsDashboardView.swift with temporal filter and baseline telemetry)[cite: 11, 12]
+- [x] 5.2 Angler Totals Ledger (AnglerTotalsView.swift with zero-fish trip telemetry and zero-omission species ledger)[cite: 11, 12]
+- [x] 5.3 Reservoir Leaderboard (ReservoirLeaderboardView.swift with top-10 heaviest landed fish matrix)[cite: 11, 12]
+- [x] 5.4 Temporal Trends & Species Breakdown Charts[cite: 11, 12]
+  - [x] SpeciesBreakdownView.swift (Spatial allocation & species landing volumes)[cite: 11, 12]
+  - [x] CatchTrendsView.swift (12-month seasonal catch density across calendar cycles)[cite: 11, 12]
 
 ## Milestone 6: Minimum Testing Product (MTP) & Beta Deployment
 
 ### 6.1 Hardware & Service Verification
-- [x] 6.1.1 Verify live WeatherKit API responses in physical/simulator runtime under paid developer account[cite: 60]
-- [ ] 6.1.2 Verify CoreLocation GPS fix and fallback cascade (Catch GPS -> Device GPS -> Reservoir fallback)[cite: 60]
-- [ ] 6.1.3 Test offline/airplane mode edge cases to confirm non-blocking save behavior[cite: 60]
+- [x] 6.1.1 Verify live WeatherKit API responses in physical/simulator runtime under paid developer account
+- [ ] 6.1.2 Verify CoreLocation GPS fix and fallback cascade (Catch GPS -> Device GPS -> Reservoir fallback)[cite: 6, 11]
+- [ ] 6.1.3 Test offline/airplane mode edge cases to confirm non-blocking save behavior[cite: 6, 11]
 
 ### 6.2 Target Screen UI Polish & Ergonomic Audit
-- [x] 6.2.1 Audit card container geometry, padding symmetry, and 44pt touch targets across screens[cite: 60]
-- [x] 6.2.2 Audit empty states and nil fallbacks (e.g., zero-catch trips, missing weather data)[cite: 60]
-- [x] 6.2.3 Review contrast and legibility across Light and Dark system modes[cite: 60]
+- [x] 6.2.1 Audit card container geometry, padding symmetry, and 44pt touch targets across screens[cite: 6, 11]
+- [x] 6.2.2 Audit empty states and nil fallbacks (e.g., zero-catch trips, missing weather data)[cite: 6, 11]
+- [x] 6.2.3 Review contrast and legibility across Light and Dark system modes[cite: 6, 11]
 
 ### 6.3 Brand Assets & Display Setup
-- [x] 6.3.1 Generate 1024x1024 App Icon asset catalog (`AppIcon`)[cite: 60]
-- [x] 6.3.2 Configure branded Launch Screen backdrop and logo presentation[cite: 60]
+- [x] 6.3.1 Generate 1024x1024 App Icon asset catalog (`AppIcon`)[cite: 6, 11]
+- [x] 6.3.2 Configure branded Launch Screen backdrop and logo presentation[cite: 6, 11]
 
 ### 6.4 App Store Connect & TestFlight Provisioning
-- [x] 6.4.1 Configure Signing & Capabilities with paid Apple Developer Team certificate[cite: 60]
-- [ ] 6.4.2 Set up Privacy Usage Descriptions in `Info.plist` (Location & Photo Access)[cite: 60]
-- [ ] 6.4.3 Archive release binary (.ipa) in Xcode and upload to App Store Connect[cite: 60]
-- [ ] 6.4.4 Set up Internal/External TestFlight Beta group and issue invite link to target users[cite: 60]
+- [x] 6.4.1 Configure Signing & Capabilities with paid Apple Developer Team certificate[cite: 6, 11]
+- [ ] 6.4.2 Set up Privacy Usage Descriptions in `Info.plist` (Location & Photo Access)[cite: 6, 11]
+- [ ] 6.4.3 Archive release binary (.ipa) in Xcode and upload to App Store Connect[cite: 6, 11]
+- [ ] 6.4.4 Set up Internal/External TestFlight Beta group and issue invite link to target users[cite: 6, 11]as

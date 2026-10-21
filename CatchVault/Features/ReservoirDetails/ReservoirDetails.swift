@@ -184,13 +184,12 @@ public struct ReservoirDetailsView: View {
     
     /// Live Spatial Catch Map Card replacing static placeholder
     private var reservoirCatchMapCard: some View {
-        CVCardContainer {
-            ReservoirCatchMapView(trips: filteredTrips)
-                .frame(maxWidth: .infinity)
-                .frame(height: 180)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            ReservoirCatchMapView(
+                reservoirName: reservoir.name,
+                trips: filteredTrips,
+                selectedYear: selectedYear
+            )
         }
-    }
     
     /// Primary Action CTA ("Start Trip")
     private var startTripButton: some View {
@@ -326,103 +325,4 @@ public struct ReservoirDetailsView: View {
     }
 }
 
-// MARK: - Spatial Reservoir Map Subview
 
-private struct ReservoirCatchMapView: View {
-    let trips: [Trip]
-    
-    /// Aggregates catches across all filtered trips that contain valid GPS coordinates
-    private var mappedCatches: [FishCatch] {
-        trips.flatMap { $0.catches }
-            .filter { $0.latitude != nil && $0.longitude != nil }
-    }
-    
-    @State private var cameraPosition: MapCameraPosition = .automatic
-    
-    var body: some View {
-        Group {
-            if mappedCatches.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "map.fill")
-                        .font(.largeTitle)
-                        .foregroundStyle(Color.brandAccent)
-                    
-                    Text("Reservoir Catch Map")
-                        .cvFont(CVFont.sectionHeader)
-                        .foregroundStyle(Color.textOnCardPrimary)
-                    
-                    Text("No GPS coordinates recorded for catches in this temporal view.")
-                        .cvFont(CVFont.metadata)
-                        .foregroundStyle(Color.textOnCardSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Map(position: $cameraPosition) {
-                    ForEach(mappedCatches) { catchItem in
-                        if let lat = catchItem.latitude, let lon = catchItem.longitude {
-                            let speciesName = catchItem.species?.name ?? "Fish"
-                            let monogram = String(speciesName.prefix(1)).uppercased()
-                            
-                            Marker(
-                                speciesName,
-                                monogram: Text(monogram),
-                                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)
-                            )
-                            .tint(SpeciesColorProvider.color(for: catchItem.species?.name))
-                        }
-                    }
-                }
-                .mapStyle(.standard)
-                .onAppear {
-                    configureCameraPosition()
-                }
-                .onChange(of: trips) { _, _ in
-                    configureCameraPosition()
-                }
-            }
-        }
-    }
-    
-    /// Computes bounding region across all aggregated catch locations to frame camera
-    private func configureCameraPosition() {
-        let coords = mappedCatches.compactMap { catchItem -> CLLocationCoordinate2D? in
-            guard let lat = catchItem.latitude, let lon = catchItem.longitude else { return nil }
-            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        }
-        
-        guard !coords.isEmpty else { return }
-        
-        if coords.count == 1 {
-            cameraPosition = .region(
-                MKCoordinateRegion(
-                    center: coords[0],
-                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                )
-            )
-        } else {
-            let latitudes = coords.map { $0.latitude }
-            let longitudes = coords.map { $0.longitude }
-            
-            let minLat = latitudes.min()!
-            let maxLat = latitudes.max()!
-            let minLon = longitudes.min()!
-            let maxLon = longitudes.max()!
-            
-            let center = CLLocationCoordinate2D(
-                latitude: (minLat + maxLat) / 2.0,
-                longitude: (minLon + maxLon) / 2.0
-            )
-            
-            let latDelta = max((maxLat - minLat) * 1.4, 0.008)
-            let lonDelta = max((maxLon - minLon) * 1.4, 0.008)
-            
-            cameraPosition = .region(
-                MKCoordinateRegion(
-                    center: center,
-                    span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lonDelta)
-                )
-            )
-        }
-    }
-}
