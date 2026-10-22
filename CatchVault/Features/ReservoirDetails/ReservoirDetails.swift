@@ -18,6 +18,7 @@ public struct ReservoirDetailsView: View {
     @State private var selectedYear: Int? = nil
     @State private var showingStartTripSheet: Bool = false
     @State private var activeTrip: Trip? = nil
+    @State private var selectedTripForDetails: Trip? = nil
     
     // MARK: - Filter Extraction & Computations
     
@@ -116,6 +117,9 @@ public struct ReservoirDetailsView: View {
         .navigationDestination(for: Trip.self) { trip in
             TripDetailsView(trip: trip)
         }
+        .navigationDestination(item: $selectedTripForDetails) { trip in
+            TripDetailsView(trip: trip)
+        }
     }
     
     // MARK: - Subviews
@@ -184,12 +188,15 @@ public struct ReservoirDetailsView: View {
     
     /// Live Spatial Catch Map Card replacing static placeholder
     private var reservoirCatchMapCard: some View {
-            ReservoirCatchMapView(
-                reservoirName: reservoir.name,
-                trips: filteredTrips,
-                selectedYear: selectedYear
-            )
-        }
+        ReservoirCatchMapView(
+            reservoirName: reservoir.name,
+            trips: filteredTrips,
+            selectedYear: selectedYear,
+            onSelectTrip: { targetTrip in
+                self.selectedTripForDetails = targetTrip
+            }
+        )
+    }
     
     /// Primary Action CTA ("Start Trip")
     private var startTripButton: some View {
@@ -324,5 +331,3 @@ public struct ReservoirDetailsView: View {
         }
     }
 }
-
-

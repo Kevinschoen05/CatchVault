@@ -1,6 +1,7 @@
 //
 //  ReservoirCatchMapView.swift
 //  CatchVault
+//  Path: CatchVault/Features/Reservoirs/ReservoirCatchMapView.swift
 //
 
 import SwiftUI
@@ -10,14 +11,21 @@ public struct ReservoirCatchMapView: View {
     let reservoirName: String
     let trips: [Trip]
     let selectedYear: Int?
+    var onSelectTrip: ((Trip) -> Void)? = nil
     
     @State private var position: MapCameraPosition = .automatic
     @State private var isMapExpanded: Bool = false
     
-     init(reservoirName: String, trips: [Trip], selectedYear: Int?) {
+     init(
+        reservoirName: String,
+        trips: [Trip],
+        selectedYear: Int?,
+        onSelectTrip: ((Trip) -> Void)? = nil
+    ) {
         self.reservoirName = reservoirName
         self.trips = trips
         self.selectedYear = selectedYear
+        self.onSelectTrip = onSelectTrip
     }
     
     private var filteredCatches: [FishCatch] {
@@ -100,7 +108,8 @@ public struct ReservoirCatchMapView: View {
         .fullScreenCover(isPresented: $isMapExpanded) {
             FullScreenMapView(
                 title: "\(reservoirName) Map",
-                catches: filteredCatches
+                catches: filteredCatches,
+                onSelectTrip: onSelectTrip
             )
         }
     }
