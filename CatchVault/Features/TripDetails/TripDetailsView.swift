@@ -15,6 +15,10 @@ public struct TripDetailsView: View {
     
     @State private var selectedViewerImage: UIImage? = nil
     
+    // MARK: - Edit State Triggers
+    @State private var showingEditTrip: Bool = false
+    @State private var catchToEdit: FishCatch? = nil
+    
     // MARK: - Initializer
     
     init(trip: Trip) {
@@ -98,11 +102,25 @@ public struct TripDetailsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.backgroundMain, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Edit") {
+                    showingEditTrip = true
+                }
+                .foregroundStyle(Color.brandAccent)
+            }
+        }
         .fullScreenCover(item: Binding(
             get: { selectedViewerImage.map { IdentifiableImage(image: $0) } },
             set: { selectedViewerImage = $0?.image }
         )) { item in
             FullScreenPhotoViewer(image: item.image)
+        }
+        .sheet(isPresented: $showingEditTrip) {
+            EditTripView(trip: trip)
+        }
+        .sheet(item: $catchToEdit) { catchItem in
+            EditCatchView(catchItem: catchItem)
         }
     }
     
@@ -303,6 +321,10 @@ public struct TripDetailsView: View {
                 }
             }
         }
+        .contentShape(Rectangle()) // Ensures the whole card registers the tap, minus the thumbnail button
+        .onTapGesture {
+            catchToEdit = catchItem
+        }
     }
     
     /// Empty State Card when no catches are attached to the trip
@@ -325,18 +347,19 @@ public struct TripDetailsView: View {
     
     /// Session Commentary & Notes Card
     private func sessionNotesCard(notes: String) -> some View {
-        CVCardContainer {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Session Notes & Tactics")
-                    .cvFont(CVFont.sectionHeader)
-                    .foregroundStyle(Color.textOnCardPrimary)
-                
-                Text(notes)
-                    .cvFont(CVFont.primaryBody)
-                    .foregroundStyle(Color.textOnCardPrimary)
+            CVCardContainer {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Session Notes & Tactics")
+                        .cvFont(CVFont.sectionHeader)
+                        .foregroundStyle(Color.textOnCardPrimary)
+                    
+                    Text(notes)
+                        .cvFont(CVFont.primaryBody)
+                        .foregroundStyle(Color.textOnCardPrimary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-    }
 }
 
 // MARK: - Identifiable Image Helper for Sheet Binding
@@ -344,5 +367,3 @@ private struct IdentifiableImage: Identifiable {
     let id = UUID()
     let image: UIImage
 }
-
-// MARK: - Spatial Map Subview
